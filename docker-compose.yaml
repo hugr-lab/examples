@@ -1,0 +1,234 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with TimescaleDB and PostGIS
+  postgres:
+    image: timescale/timescaledb-ha:pg16
+    container_name: hugr-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hugr}
+      POSTGRES_USER: ${POSTGRES_USER:-hugr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hugr_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      TIMESCALEDB_TELEMETRY: 'off'
+    ports:
+      - "${POSTGRES_PORT:-18032}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hugr} -d ${POSTGRES_DB:-hugr}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: >
+      postgres
+      -c shared_preload_libraries=timescaledb
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c work_mem=16MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+    restart: unless-stopped
+
+  # Redis for L2 caching (only starts if CACHE_L2_ENABLED=true)
+  redis:
+    image: redis:7-alpine
+    container_name: hugr-redis
+    profiles: 
+      - cache
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+    ports:
+      - "${REDIS_PORT:-18079}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    command: >
+      redis-server 
+      --requirepass ${REDIS_PASSWORD:-redis_password}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    restart: unless-stopped
+
+  # MinIO S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: hugr-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minio_password123}
+    ports:
+      - "${MINIO_API_PORT:-18080}:9000"
+      - "${MINIO_CONSOLE_PORT:-18081}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hugr-prometheus
+    profiles:
+      - monitoring
+    ports:
+      - "${PROMETHEUS_PORT:-18090}:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./grafana/provisioning/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  # hugr server
+  hugr:
+    image: ghcr.io/hugr-lab/automigrate:latest
+    container_name: hugr-server
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      # Redis dependency только если кэш включен
+    ports:
+      - "${HUGR_PORT:-18000}:15000"
+      - "${HUGR_METRICS_PORT:-18001}:14000"  # Metrics & health port
+    volumes:
+      # Work directory and data volumes
+      - .:/workspace
+      - ./data/hugr:/hugr-data
+    working_dir: /workspace
+    environment:
+      # Server settings
+      BIND: ":15000"
+      SERVICE_BIND: ":14000"  # Metrics and health endpoint
+      DEBUG: ${DEBUG:-true}
+      ADMIN_UI: ${ADMIN_UI:-true}
+      ALLOW_PARALLEL: true
+      MAX_PARALLEL_QUERIES: ${MAX_PARALLEL_QUERIES:-10}
+      MAX_DEPTH: 10
+
+      # Core database (DuckDB file)
+      DB_HOME_DIRECTORY: "/hugr-data"
+      CORE_DB_PATH: "/hugr-data/core.duckdb"
+
+      # Authentication & Authorization
+      ALLOWED_ANONYMOUS: ${ALLOWED_ANONYMOUS:-true}
+      ANONYMOUS_ROLE: ${ANONYMOUS_ROLE:-viewer}
+      SECRET_KEY: ${SECRET_KEY:-hugr_secret_key_change_in_production}
+
+      # CORS settings
+      CORS_ALLOWED_ORIGINS: ${CORS_ORIGINS:-http://localhost:18000}
+      CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+      CORS_ALLOWED_HEADERS: "Content-Type,Authorization,x-api-key,Accept"
+
+      # Caching configuration
+      CACHE_TTL: ${CACHE_TTL:-30m}
+      
+      # L1 Cache (in-memory)
+      CACHE_L1_ENABLED: ${CACHE_L1_ENABLED:-true}
+      CACHE_L1_MAX_SIZE: ${CACHE_L1_MAX_SIZE:-50000}
+      CACHE_L1_CLEAN_TIME: "5m"
+      CACHE_L1_EVICTION_TIME: "10m"
+      CACHE_L1_MAX_ITEM_SIZE: 1048576
+      CACHE_L1_SHARDS: 1024
+      
+      # L2 Cache (Redis) - управляется через профили
+      CACHE_L2_ENABLED: ${CACHE_L2_ENABLED:-false}
+      CACHE_L2_BACKEND: "redis"
+      CACHE_L2_ADDRESSES: "redis:6379"
+      CACHE_L2_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      CACHE_L2_DATABASE: 0
+
+      # DuckDB settings
+      DB_MAX_MEMORY: "1GB"
+      DB_WORKER_THREADS: 4
+      DB_ALLOWED_DIRECTORIES: "/workspace,/hugr-data,/tmp"
+
+      # S3 settings
+      CORE_DB_S3_ENDPOINT: "http://minio:9000"
+      CORE_DB_S3_REGION: "us-east-1"
+      CORE_DB_S3_KEY: ${MINIO_USER:-minio_admin}
+      CORE_DB_S3_SECRET: ${MINIO_PASSWORD:-minio_password123}
+      CORE_DB_S3_USE_SSL: false
+
+      # Example-specific environment variables (loaded from example/.env)
+      HUGR_SCHEMA_FILE: ${HUGR_SCHEMA_FILE:-}
+      EXAMPLE_NAME: ${EXAMPLE_NAME:-getting-started}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:14000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # Grafana для мониторинга
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hugr-grafana
+    profiles: 
+      - monitoring
+    depends_on:
+      - postgres
+      - hugr
+      - prometheus
+    ports:
+      - "${GRAFANA_PORT:-18091}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: "grafana-worldmap-panel,grafana-clock-panel,grafana-piechart-panel"
+      # Grafana database in PostgreSQL
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgres:5432
+      GF_DATABASE_NAME: ${POSTGRES_DB:-grafana}
+      GF_DATABASE_USER: ${POSTGRES_USER:-hugr}
+      GF_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-hugr_password}
+      # Enable anonymous access for demo
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  grafana_data:
+    driver: local
+  prometheus_data:
+    driver: local
+
+networks:
+  default:
+    name: hugr-network
