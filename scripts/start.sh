@@ -191,7 +191,7 @@ if [ "$DETACHED" = true ]; then
     echo "   🌐 hugr GraphiQL:  http://localhost:${HUGR_PORT:-18000}/admin"
     echo "   📊 hugr Metrics:   http://localhost:${HUGR_METRICS_PORT:-18001}/metrics"
     echo "   💚 hugr Health:    http://localhost:${HUGR_METRICS_PORT:-18001}/health"
-    echo "   🗄️  PostgreSQL:     localhost:${POSTGRES_PORT:-5432} (${POSTGRES_USER:-hugr}/${POSTGRES_PASSWORD:-hugr_password})"
+    echo "   🗄️  PostgreSQL:     postgres://${POSTGRES_USER:-hugr}:${POSTGRES_PASSWORD:-hugr_password}@localhost:${POSTGRES_PORT:-5432}"
     echo "   📦 MinIO Console:   http://localhost:${MINIO_CONSOLE_PORT:-18081} (${MINIO_USER:-minio_admin}/${MINIO_PASSWORD:-minio_password123})"
     
     if [ "$CACHE" = true ]; then
