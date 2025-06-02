@@ -244,3 +244,86 @@ type order_details @table(name: "order_details") {
   # Calculated total amount of ordered product
   total: Float! @sql(exp: "round(([unit_price] * [quantity] * (1 - [discount]))*100)/100")
 }
+
+# Shipped products view
+type shipped_products_view 
+  @view(
+    name: "shipped_products"
+    sql: """
+    SELECT 
+      orders.customer_id,
+      orders.employee_id,
+      orders.order_date,
+      orders.shipped_date,
+      orders.ship_via,
+      order_details.product_id,
+      order_details.unit_price,
+      order_details.quantity,
+      order_details.discount,
+      products.supplier_id,
+      products.category_id
+    FROM orders
+        INNER JOIN order_details ON orders.order_id = order_details.order_id
+        INNER JOIN products ON order_details.product_id = products.product_id
+WHERE orders.shipped_date IS NOT NULL
+    """
+  ) 
+{
+  customer_id: String! @field_references(
+    name: "shipped_products_view_customer_id"
+    references_name: "customers"
+    field: "id"
+    query: "customer"
+    description: "Customer"
+    references_query: "shippedProducts"
+    references_description: "Shipped products for this customer"
+  )
+  employee_id: Int! @field_references(
+    name: "shipped_products_view_employee_id"
+    references_name: "employees"
+    field: "id"
+    query: "employee"
+    description: "Employee"
+    references_query: "shippedProducts"
+    references_description: "Shipped products handled by this employee"
+  )
+  order_date: Timestamp
+  shipped_date: Timestamp
+  ship_via: Int @field_references(
+    name: "shipped_products_view_ship_via"
+    references_name: "shippers"
+    field: "id"
+    query: "shipper"
+    description: "Shipper"
+    references_query: "shippedProducts"
+    references_description: "Shipped products by this shipper"
+  )
+  product_id: Int! @field_references(
+    name: "shipped_products_view_product_id"
+    references_name: "products"
+    field: "id"
+    query: "product"
+    description: "Product"
+    references_query: "shippedProducts"
+    references_description: "Shipped product details in this order"
+  )
+  unit_price: Float!
+  quantity: Int!
+  discount: Float!
+  supplier_id: Int! @field_references(
+    name: "shipped_products_view_supplier_id"
+    references_name: "suppliers"
+    field: "id"
+    query: "supplier"
+    description: "Supplier of the product in the order details view."
+  )
+  category_id: Int! @field_references(
+    name: "shipped_products_view_category_id"
+    references_name: "categories"
+    field: "id"
+    query: "category"
+    description:
+      "Category of the product in the order details view."
+  )
+  total: Float! @sql(exp: "round(([unit_price] * [quantity] * (1 - [discount]))*100)/100")
+}

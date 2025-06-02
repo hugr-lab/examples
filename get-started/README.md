@@ -120,7 +120,7 @@ You can use the following queries:
 ```graphql
 {
   northwind {
-  	order_details_bucket_aggregation(
+    order_details_bucket_aggregation(
       order_by:[
         {field: "aggregations.total.sum", direction: DESC}
       ]
@@ -155,7 +155,7 @@ You can use the following queries:
 ```graphql
 {
   northwind {
-  	orders_bucket_aggregation(
+    orders_bucket_aggregation(
       filter: {
         shipped_date: {
           is_null: false
@@ -188,7 +188,7 @@ You can use the following queries:
 ```graphql
 {
   northwind {
-  	orders_bucket_aggregation(
+    orders_bucket_aggregation(
       filter: {
         shipped_date: {
           is_null: false
@@ -228,7 +228,7 @@ You can use the following queries:
 ```graphql
 {
   northwind {
-  	orders_bucket_aggregation(
+    orders_bucket_aggregation(
       filter: {
         shipped_date: {
           is_null: false

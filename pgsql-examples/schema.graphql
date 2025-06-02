@@ -1,0 +1,46 @@
+type categories @table(name: "categories") {
+  id: ID! @pk @default(sequence: "categories_id_seq")
+  name: String!
+}
+
+type products @table(name: "products") {
+  id: Int! @pk @default(sequence: "products_id_seq")
+  name: String!
+  price: Float!
+  category_id: category @field_references(
+    name: "products_category_id", 
+    references_name: "categories"
+    field: "id",
+    query: "category"
+    description: "Category of the product"
+    references_query: "products"
+    references_description: "Products in the category"
+  )
+}
+
+type tags @table(name: "tags") {
+  id: Int! @pk @default(sequence: "tags_id_seq")
+  name: String!
+  created_at: Timestamp! @default(value: "now()")
+}
+
+type products_tags @table(name: "products_tags", is_m2m: true) {
+  product_id: products @field_references(
+    name: "products_tags_product_id", 
+    references_name: "products"
+    field: "id",
+    query: "product"
+    description: "Product in the tag"
+    references_query: "tags"
+    references_description: "tags"
+  )
+  tag_id: tags @field_references(
+    name: "products_tags_tag_id", 
+    references_name: "tags"
+    field: "id",
+    query: "tag"
+    description: "Tag of the product"
+    references_query: "products"
+    references_description: "Tagged products"
+  )
+}
