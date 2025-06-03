@@ -65,7 +65,7 @@ You can use the following variables:
         "name": "northwind",
         "type": "uri",
         "description": "Northwind database schema",
-        "path": "/workspace/get-started/schema"
+        "path": "/workspace/examples/get-started/schema"
       }
     ]
   }

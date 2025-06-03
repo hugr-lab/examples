@@ -34,6 +34,39 @@ services:
       -c default_statistics_target=100
     restart: unless-stopped
 
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: hugr-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hugr}
+      MYSQL_USER: ${MYSQL_USER:-hugr}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-hugr_password}
+      MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
+      MYSQL_INNODB_LOG_FILE_SIZE: 64M
+      MYSQL_MAX_CONNECTIONS: 200
+    ports:
+      - "${MYSQL_PORT:-18036}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-hugr}", "-p${MYSQL_PASSWORD:-hugr_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: >
+      mysqld
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --innodb-log-file-size=64M
+      --max-connections=200
+      --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    restart: unless-stopped
+
   # Redis for L2 caching (only starts if CACHE_L2_ENABLED=true)
   redis:
     image: redis:7-alpine
@@ -219,6 +252,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  mysql_data:
     driver: local
   redis_data:
     driver: local

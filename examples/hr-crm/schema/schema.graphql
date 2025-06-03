@@ -1,0 +1,457 @@
+# Job boards and platforms where vacancies are posted
+type job_boards @table(name: "job_boards") {
+  id: Int! @pk
+  name: String!
+  website_url: String
+  api_endpoint: String
+  cost_per_posting: Float
+  is_active: Boolean!
+  created_at: Timestamp!
+  updated_at: Timestamp!
+}
+
+# Departments in the company
+type departments @table(name: "departments") {
+  id: Int! @pk
+  name: String!
+  description: String
+  manager_email: String
+  budget: Float
+  is_active: Boolean!
+  created_at: Timestamp!
+}
+
+# Job positions/vacancies
+type positions @table(name: "positions") {
+  id: Int! @pk
+  title: String!
+  department_id: Int! @field_references(
+    name: "positions_department_id"
+    references_name: "departments"
+    field: "id"
+    query: "department"
+    description: "Department"
+    references_query: "positions"
+    references_description: "Positions in this department"
+  )
+  description: String
+  requirements: String
+  salary_min: Float
+  salary_max: Float
+  employment_type: String!
+  location: String
+  is_remote: Boolean!
+  experience_years_min: Int!
+  experience_years_max: Int
+  status: String!
+  created_at: Timestamp!
+  updated_at: Timestamp!
+  closed_at: Timestamp
+}
+
+# Recruitment pipeline templates
+type pipeline_templates @table(name: "pipeline_templates") {
+  id: Int! @pk
+  name: String!
+  description: String
+  is_default: Boolean!
+  is_active: Boolean!
+  created_at: Timestamp!
+}
+
+# Stages in recruitment pipeline
+type pipeline_stages @table(name: "pipeline_stages") {
+  id: Int! @pk
+  template_id: Int! @field_references(
+    name: "pipeline_stages_template_id"
+    references_name: "pipeline_templates"
+    field: "id"
+    query: "template"
+    description: "Pipeline template"
+    references_query: "stages"
+    references_description: "Stages in this pipeline template"
+  )
+  name: String!
+  description: String
+  stage_order: Int!
+  stage_type: String!
+  is_required: Boolean!
+  auto_advance: Boolean!
+  duration_days: Int!
+}
+
+# Candidates/job applicants
+type candidates @table(name: "candidates") {
+  id: Int! @pk
+  first_name: String!
+  last_name: String!
+  email: String!
+  phone: String
+  linkedin_url: String
+  github_url: String
+  portfolio_url: String
+  current_position: String
+  current_company: String
+  current_salary: Float
+  expected_salary: Float
+  location: String
+  is_open_to_remote: Boolean!
+  years_of_experience: Int!
+  resume_file_path: String
+  cover_letter: String
+  skills: String
+  source: String!
+  created_at: Timestamp!
+  updated_at: Timestamp!
+}
+
+# Job applications
+type applications @table(name: "applications") {
+  id: Int! @pk
+  candidate_id: Int! @field_references(
+    name: "applications_candidate_id"
+    references_name: "candidates"
+    field: "id"
+    query: "candidate"
+    description: "Candidate"
+    references_query: "applications"
+    references_description: "Applications submitted by this candidate"
+  )
+  position_id: Int! @field_references(
+    name: "applications_position_id"
+    references_name: "positions"
+    field: "id"
+    query: "position"
+    description: "Position"
+    references_query: "applications"
+    references_description: "Applications for this position"
+  )
+  job_board_id: Int @field_references(
+    name: "applications_job_board_id"
+    references_name: "job_boards"
+    field: "id"
+    query: "jobBoard"
+    description: "Job board"
+    references_query: "applications"
+    references_description: "Applications from this job board"
+  )
+  pipeline_template_id: Int! @field_references(
+    name: "applications_pipeline_template_id"
+    references_name: "pipeline_templates"
+    field: "id"
+    query: "pipelineTemplate"
+    description: "Pipeline template"
+    references_query: "applications"
+    references_description: "Applications using this pipeline template"
+  )
+  status: String!
+  current_stage_id: Int @field_references(
+    name: "applications_current_stage_id"
+    references_name: "pipeline_stages"
+    field: "id"
+    query: "currentStage"
+    description: "Current stage"
+    references_query: "applications"
+    references_description: "Applications currently at this stage"
+  )
+  applied_at: Timestamp!
+  last_activity_at: Timestamp!
+  hired_at: Timestamp
+  rejected_at: Timestamp
+  rejection_reason: String
+  notes: String
+}
+
+# Interview types
+type interview_types @table(name: "interview_types") {
+  id: Int! @pk
+  name: String!
+  description: String
+  duration_minutes: Int!
+  is_technical: Boolean!
+  is_remote_possible: Boolean!
+}
+
+# Interviews scheduled for applications
+type interviews @table(name: "interviews") {
+  id: Int! @pk
+  application_id: Int! @field_references(
+    name: "interviews_application_id"
+    references_name: "applications"
+    field: "id"
+    query: "application"
+    description: "Application"
+    references_query: "interviews"
+    references_description: "Interviews for this application"
+  )
+  stage_id: Int! @field_references(
+    name: "interviews_stage_id"
+    references_name: "pipeline_stages"
+    field: "id"
+    query: "stage"
+    description: "Pipeline stage"
+    references_query: "interviews"
+    references_description: "Interviews at this stage"
+  )
+  interview_type_id: Int! @field_references(
+    name: "interviews_interview_type_id"
+    references_name: "interview_types"
+    field: "id"
+    query: "interviewType"
+    description: "Interview type"
+    references_query: "interviews"
+    references_description: "Interviews of this type"
+  )
+  interviewer_email: String!
+  interviewer_name: String
+  scheduled_at: Timestamp!
+  duration_minutes: Int!
+  location: String
+  meeting_url: String
+  status: String!
+  feedback: String
+  rating: Int
+  recommendation: String
+  completed_at: Timestamp
+  created_at: Timestamp!
+}
+
+# Application stage history
+type application_stage_history @table(name: "application_stage_history") {
+  id: Int! @pk
+  application_id: Int! @field_references(
+    name: "application_stage_history_application_id"
+    references_name: "applications"
+    field: "id"
+    query: "application"
+    description: "Application"
+    references_query: "stageHistory"
+    references_description: "Stage history for this application"
+  )
+  stage_id: Int @field_references(
+    name: "application_stage_history_stage_id"
+    references_name: "pipeline_stages"
+    field: "id"
+    query: "stage"
+    description: "Pipeline stage"
+    references_query: "stageHistory"
+    references_description: "Stage history entries for this stage"
+  )
+  status: String!
+  entered_at: Timestamp!
+  completed_at: Timestamp
+  notes: String
+  moved_by_email: String
+}
+
+# Skills and competencies
+type skills @table(name: "skills") {
+  id: Int! @pk
+  name: String!
+  category: String
+  description: String
+}
+
+# Position required skills (many-to-many links table)
+type position_skills @table(name: "position_skills") {
+  position_id: Int! @pk @field_references(
+    name: "position_skills_position_id"
+    references_name: "positions"
+    field: "id"
+    query: "position"
+    description: "Position"
+    references_query: "requiredSkills"
+    references_description: "Required skills for this position"
+  )
+  skill_id: Int! @pk @field_references(
+    name: "position_skills_skill_id"
+    references_name: "skills"
+    field: "id"
+    query: "skill"
+    description: "Skill"
+    references_query: "positions"
+    references_description: "Positions requiring this skill"
+  )
+  importance: String!
+  experience_years_min: Int!
+}
+
+# Candidate skills (many-to-many)
+type candidate_skills @table(name: "candidate_skills") {
+  candidate_id: Int! @pk @field_references(
+    name: "candidate_skills_candidate_id"
+    references_name: "candidates"
+    field: "id"
+    query: "candidate"
+    description: "Candidate"
+    references_query: "matched_skills"
+    references_description: "Skills of this candidate"
+  )
+  skill_id: Int! @pk @field_references(
+    name: "candidate_skills_skill_id"
+    references_name: "skills"
+    field: "id"
+    query: "skill"
+    description: "Skill"
+    references_query: "matched_candidates"
+    references_description: "Candidates with this skill"
+  )
+  experience_years: Int!
+  proficiency_level: String!
+  verified: Boolean!
+}
+
+# Application ratings and scores
+type application_scores @table(name: "application_scores") {
+  id: Int! @pk
+  application_id: Int! @field_references(
+    name: "application_scores_application_id"
+    references_name: "applications"
+    field: "id"
+    query: "application"
+    description: "Application"
+    references_query: "scores"
+    references_description: "Scores for this application"
+  )
+  stage_id: Int @field_references(
+    name: "application_scores_stage_id"
+    references_name: "pipeline_stages"
+    field: "id"
+    query: "stage"
+    description: "Pipeline stage"
+    references_query: "scores"
+    references_description: "Scores given at this stage"
+  )
+  score_type: String!
+  score: Float!
+  max_score: Float!
+  evaluator_email: String!
+  comments: String
+  evaluated_at: Timestamp!
+}
+
+# Notes and comments on applications
+type application_notes @table(name: "application_notes") {
+  id: Int! @pk
+  application_id: Int! @field_references(
+    name: "application_notes_application_id"
+    references_name: "applications"
+    field: "id"
+    query: "application"
+    description: "Application"
+    references_query: "added_notes"
+    references_description: "Notes for this application"
+  )
+  author_email: String!
+  author_name: String
+  note: String!
+  is_internal: Boolean!
+  created_at: Timestamp!
+}
+
+# Active positions with department info (view)
+type active_positions_view @view(name: "active_positions_view") {
+  id: Int!
+  title: String!
+  department_id: Int! @field_references(
+    name: "active_positions_view_department_id"
+    references_name: "departments"
+    field: "id"
+    query: "department"
+    description: "Department"
+    references_query: "activePositions"
+    references_description: "Active positions in this department"
+  )
+  description: String
+  requirements: String
+  salary_min: Float
+  salary_max: Float
+  employment_type: String!
+  location: String
+  is_remote: Boolean!
+  experience_years_min: Int!
+  experience_years_max: Int
+  status: String!
+  created_at: Timestamp!
+  updated_at: Timestamp!
+  closed_at: Timestamp
+  department_name: String!
+  department_manager: String
+  active_applications_count: Int!
+}
+
+# Application pipeline view with current stage info (view)
+type application_pipeline_view @view(name: "application_pipeline_view") {
+  id: Int!
+  candidate_id: Int! @field_references(
+    name: "application_pipeline_view_candidate_id"
+    references_name: "candidates"
+    field: "id"
+    query: "candidate"
+    description: "Candidate"
+    references_query: "applicationPipeline"
+    references_description: "Application pipeline for this candidate"
+  )
+  position_id: Int! @field_references(
+    name: "application_pipeline_view_position_id"
+    references_name: "positions"
+    field: "id"
+    query: "position"
+    description: "Position"
+    references_query: "applicationPipeline"
+    references_description: "Application pipeline for this position"
+  )
+  job_board_id: Int @field_references(
+    name: "application_pipeline_view_job_board_id"
+    references_name: "job_boards"
+    field: "id"
+    query: "jobBoard"
+    description: "Job board"
+    references_query: "applicationPipeline"
+    references_description: "Application pipeline from this job board"
+  )
+  pipeline_template_id: Int! @field_references(
+    name: "application_pipeline_view_pipeline_template_id"
+    references_name: "pipeline_templates"
+    field: "id"
+    query: "pipelineTemplate"
+    description: "Pipeline template"
+    references_query: "applicationPipeline"
+    references_description: "Application pipeline using this template"
+  )
+  status: String!
+  current_stage_id: Int @field_references(
+    name: "application_pipeline_view_current_stage_id"
+    references_name: "pipeline_stages"
+    field: "id"
+    query: "currentStage"
+    description: "Current stage"
+    references_query: "applicationPipeline"
+    references_description: "Application pipeline at this stage"
+  )
+  applied_at: Timestamp!
+  last_activity_at: Timestamp!
+  hired_at: Timestamp
+  rejected_at: Timestamp
+  rejection_reason: String
+  notes: String
+  first_name: String!
+  last_name: String!
+  candidate_email: String!
+  candidate_phone: String
+  position_title: String!
+  department_id: Int! @field_references(
+    name: "application_pipeline_view_department_id"
+    references_name: "departments"
+    field: "id"
+    query: "department"
+    description: "Department"
+    references_query: "applicationPipeline"
+    references_description: "Application pipeline for positions in this department"
+  )
+  department_name: String!
+  current_stage_name: String
+  current_stage_type: String
+  pipeline_name: String!
+  completed_interviews_count: Int!
+}

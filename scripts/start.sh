@@ -103,12 +103,13 @@ fi
 echo "📁 Creating data directories..."
 mkdir -p ./data/hugr
 mkdir -p ./data/postgres
+mkdir -p ./data/mysql
 mkdir -p ./data/redis
 mkdir -p ./data/minio
 
 # Start core services first
-echo "🔄 Starting core services (PostgreSQL, MinIO)..."
-$COMPOSE_CMD up $DETACH_FLAG postgres minio
+echo "🔄 Starting core services (PostgreSQL, MySQL, MinIO)..."
+$COMPOSE_CMD up $DETACH_FLAG postgres mysql minio
 
 if [ "$DETACHED" = true ]; then
     # Wait for core services
@@ -192,6 +193,7 @@ if [ "$DETACHED" = true ]; then
     echo "   📊 hugr Metrics:   http://localhost:${HUGR_METRICS_PORT:-18001}/metrics"
     echo "   💚 hugr Health:    http://localhost:${HUGR_METRICS_PORT:-18001}/health"
     echo "   🗄️  PostgreSQL:     postgres://${POSTGRES_USER:-hugr}:${POSTGRES_PASSWORD:-hugr_password}@localhost:${POSTGRES_PORT:-5432}"
+    echo "   🗄️  MySQL:          mysql://${MYSQL_USER:-hugr}:${MYSQL_PASSWORD:-hugr_password}@localhost:${MYSQL_PORT:-18036}"
     echo "   📦 MinIO Console:   http://localhost:${MINIO_CONSOLE_PORT:-18081} (${MINIO_USER:-minio_admin}/${MINIO_PASSWORD:-minio_password123})"
     
     if [ "$CACHE" = true ]; then

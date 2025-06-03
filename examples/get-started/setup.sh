@@ -62,7 +62,7 @@ echo -e "${BLUE}🗄️  Northwind Database Deployment${NC}"
 echo "================================="
 
 # Check if we're in the right directory (should contain .env in parent directories)
-if [ ! -f "../.env" ]; then
+if [ ! -f "../../.env" ]; then
     echo -e "${RED}❌ Main .env file not found!${NC}"
     echo "Please run this script from the examples/getting-started/ directory"
     echo "and ensure hugr infrastructure is set up."
@@ -70,7 +70,7 @@ if [ ! -f "../.env" ]; then
 fi
 
 # Load environment variables from main .env
-source ../.env
+source ../../.env
 export EXAMPLE_DB_NAME="northwind"
 echo -e "${BLUE}📋 Configuration:${NC}"
 echo "   PostgreSQL Container: hugr-postgres"
@@ -90,14 +90,14 @@ fi
 if ! docker ps --format "table {{.Names}}" | grep -q "hugr-postgres"; then
     echo -e "${RED}❌ PostgreSQL container 'hugr-postgres' is not running!${NC}"
     echo "Please start hugr infrastructure first:"
-    echo "  cd .."
+    echo "  cd ../../"
     echo "  ./scripts/start.sh"
     exit 1
 fi
 
 # Test connection to PostgreSQL
 echo -e "${YELLOW}🔄 Testing PostgreSQL connection...${NC}"
-if ! docker-compose -f ../docker-compose.yaml exec postgres pg_isready -U "$POSTGRES_USER" -d "postgres" > /dev/null 2>&1; then
+if ! docker-compose -f ../../docker-compose.yaml exec postgres pg_isready -U "$POSTGRES_USER" -d "postgres" > /dev/null 2>&1; then
     echo -e "${RED}❌ Failed to connect to PostgreSQL!${NC}"
     echo "Please ensure hugr infrastructure is running properly."
     exit 1
@@ -106,7 +106,7 @@ echo -e "${GREEN}✅ PostgreSQL connection successful${NC}"
 
 # Check if northwind database exists
 echo -e "${YELLOW}🔄 Checking if '$DB_NAME' database exists...${NC}"
-DB_EXISTS=$(docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -t -c "SELECT 1 FROM pg_database WHERE datname='$EXAMPLE_DB_NAME';" | xargs || echo "")
+DB_EXISTS=$(docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -t -c "SELECT 1 FROM pg_database WHERE datname='$EXAMPLE_DB_NAME';" | xargs || echo "")
 
 if [ "$DB_EXISTS" = "1" ]; then
     echo -e "${YELLOW}⚠️  Database '$EXAMPLE_DB_NAME' already exists!${NC}"
@@ -126,22 +126,22 @@ if [ "$DB_EXISTS" = "1" ]; then
     
     # Terminate existing connections to the database
     echo -e "${YELLOW}🔄 Terminating existing connections to '$EXAMPLE_DB_NAME'...${NC}"
-    docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$EXAMPLE_DB_NAME' AND pid <> pg_backend_pid();" > /dev/null 2>&1
+    docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$EXAMPLE_DB_NAME' AND pid <> pg_backend_pid();" > /dev/null 2>&1
 
     # Drop the existing database
     echo -e "${YELLOW}🔄 Dropping existing database '$EXAMPLE_DB_NAME'...${NC}"
-    docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -c "DROP DATABASE IF EXISTS $EXAMPLE_DB_NAME;" > /dev/null 2>&1
+    docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -c "DROP DATABASE IF EXISTS $EXAMPLE_DB_NAME;" > /dev/null 2>&1
     echo -e "${GREEN}✅ Existing database '$EXAMPLE_DB_NAME' dropped${NC}"
 fi
 
 # Create the northwind database
 echo -e "${YELLOW}🔄 Creating database '$EXAMPLE_DB_NAME'...${NC}"
-docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -c "CREATE DATABASE $EXAMPLE_DB_NAME;" > /dev/null 2>&1
+docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "postgres" -c "CREATE DATABASE $EXAMPLE_DB_NAME;" > /dev/null 2>&1
 echo -e "${GREEN}✅ Database '$EXAMPLE_DB_NAME' created${NC}"
 
 # Import the dump file
 echo -e "${YELLOW}🔄 Importing Northwind data from '$DUMP_FILE'...${NC}"
-if docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "$EXAMPLE_DB_NAME" < "$DUMP_FILE" > /dev/null 2>&1; then
+if docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "$EXAMPLE_DB_NAME" < "$DUMP_FILE" > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Northwind data imported successfully${NC}"
 else
     echo -e "${RED}❌ Failed to import data from '$DUMP_FILE'!${NC}"
@@ -151,7 +151,7 @@ fi
 
 # Verify the import by checking table count
 echo -e "${YELLOW}🔄 Verifying import...${NC}"
-TABLE_COUNT=$(docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "$EXAMPLE_DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" | xargs)
+TABLE_COUNT=$(docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "$EXAMPLE_DB_NAME" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" | xargs)
 
 if [ "$TABLE_COUNT" -gt 0 ]; then
     echo -e "${GREEN}✅ Import verified: $TABLE_COUNT tables found${NC}"
@@ -162,7 +162,7 @@ fi
 
 # Show table list
 echo -e "${BLUE}📊 Tables in '$EXAMPLE_DB_NAME' database:${NC}"
-docker-compose -f ../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "$EXAMPLE_DB_NAME" -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;" -t | sed 's/^/ - /'
+docker-compose -f ../../docker-compose.yaml exec -T postgres psql -U "$POSTGRES_USER" -d "$EXAMPLE_DB_NAME" -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;" -t | sed 's/^/ - /'
 
 echo ""
 echo -e "${GREEN}🎉 Northwind database deployment completed successfully!${NC}"
@@ -174,5 +174,5 @@ echo "   User: $POSTGRES_USER"
 echo ""
 echo -e "${BLUE}🔗 Next steps:${NC}"
 echo "   • Update hugr schema to connect to '$EXAMPLE_DB_NAME' database"
-echo "   • Test connection: docker-compose -f ../docker-compose.yaml exec postgres psql -U $POSTGRES_USER -d $EXAMPLE_DB_NAME"
+echo "   • Test connection: docker-compose -f ../../docker-compose.yaml exec postgres psql -U $POSTGRES_USER -d $EXAMPLE_DB_NAME"
 echo ""
