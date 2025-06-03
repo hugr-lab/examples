@@ -436,7 +436,7 @@ You can use the following queries to explore the recruitment data:
 }
 ```
 
-## Mutations
+## Limitation
 
 Currently, the hugr doesn't support auto_increment fields in MySQL mutations, so you can only use queries to retrieve data. However, you can still perform mutations to update existing records or insert new ones without auto-increment fields.
 
