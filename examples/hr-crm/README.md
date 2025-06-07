@@ -4,7 +4,7 @@ This example sets up an HR CRM (Human Resources Customer Relationship Management
 
 The HR CRM database contains data about a fictional company's recruitment and hiring process. It includes tables for candidates, job positions, applications, interviews, pipeline stages, skills, and more. This system helps HR teams manage the entire recruitment lifecycle from job posting to hiring decisions.
 
-The example uses the `hugr` library to generate a GraphQL schema from the HR CRM database schema. The generated schema can be used to query and manipulate recruitment data using GraphQL.
+The example uses the `hugr` to make accessible the HR CRM database through unified GraphQL API. The generated schema can be used to query and manipulate recruitment data using GraphQL.
 
 ## Database Schema Overview
 
