@@ -1,4 +1,4 @@
-# Open Payments duckdb example
+# Open Payments DuckDB example
 
 This example demonstrates how to set up a data source for Open Payments data using DuckDB in ``hugr``. The Open Payments data is a public dataset that contains information about financial relationships between healthcare providers and pharmaceutical companies. It also demonstrates how working with `hugr` self described data sources and data source as module.
 

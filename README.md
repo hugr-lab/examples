@@ -1,4 +1,8 @@
-# examples
+# The `hugr` examples
+
+This repository contains examples of how to use the `hugr` platform for various use-cases, including setting up data sources, creating GraphQL schemas, and integrating with different services like PostgreSQL, Redis, and MinIO.
+
+For more information about the `hugr` platform, please visit the [Web site](https://hugr-lab.github.io).
 
 This repo contains examples of hugr use-cases.
 
