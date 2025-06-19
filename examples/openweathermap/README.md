@@ -90,7 +90,7 @@ This mutation will create a new data source with the name `owm` and the path to 
 You can now try to call the APIs using the hugr core function `http_data_source_request_scalar` in the GraphiQL interface. Here are some example queries:
 
 ```graphql
-query getCurrentWeather($lat: Float!, $lon: Float!) {
+query getCurrentWeather{
   function{
     core{
       http_data_source_request_scalar(
