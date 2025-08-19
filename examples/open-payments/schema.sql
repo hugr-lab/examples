@@ -43,27 +43,5 @@ SELECT * FROM read_csv_auto(
     max_line_size=1048576
 );
 
--- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_general_payments_physician_id 
-ON general_payments(Physician_Profile_ID);
-
-CREATE INDEX IF NOT EXISTS idx_general_payments_submitting_entity 
-ON general_payments(Submitting_Applicable_Manufacturer_or_Applicable_GPO_Name);
-
-CREATE INDEX IF NOT EXISTS idx_general_payments_date 
-ON general_payments(Date_of_Payment);
-
-CREATE INDEX IF NOT EXISTS idx_general_payments_amount 
-ON general_payments(Total_Amount_of_Payment_USDollars);
-
-CREATE INDEX IF NOT EXISTS idx_research_payments_physician_id 
-ON research_payments(Physician_Profile_ID);
-
-CREATE INDEX IF NOT EXISTS idx_research_payments_submitting_entity 
-ON research_payments(Submitting_Applicable_Manufacturer_or_Applicable_GPO_Name);
-
-CREATE INDEX IF NOT EXISTS idx_ownership_physician_id 
-ON ownership_information(Physician_Profile_ID);
-
 -- Display summary statistics
 SELECT 'Database creation completed successfully!' as status;

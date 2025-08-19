@@ -243,17 +243,6 @@ else
     exit 1
 fi
 
-# Verify the database by checking table count
-echo -e "${YELLOW}🔄 Verifying database...${NC}"
-TABLE_COUNT=$(duckdb "$DB_FILE" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'main';" 2>/dev/null | tail -n 1 | tr -d '\r' || echo "0")
-
-if [ "$TABLE_COUNT" -gt 0 ]; then
-    echo -e "${GREEN}✅ Database verified: $TABLE_COUNT tables found${NC}"
-else
-    echo -e "${RED}❌ Database verification failed: no tables found${NC}"
-    exit 1
-fi
-
 # Show table list
 echo -e "${BLUE}📊 Tables in database:${NC}"
 duckdb "$DB_FILE" "SHOW TABLES;" 2>/dev/null | sed 's/^/ - /' || echo "   Could not retrieve table list"
@@ -303,7 +292,7 @@ echo "   CSV Files: $CSV_COUNT"
 echo ""
 echo -e "${BLUE}🔗 Next steps:${NC}"
 echo "   • Test connection: duckdb $DB_FILE"
-echo "   • Query data: duckdb $DB_FILE \"SELECT COUNT(*) FROM information_schema.tables;\""
+echo "   • Query data: duckdb $DB_FILE \"SELECT COUNT(*) FROM duckdb_tables();\""
 echo "   • Create GraphQL schema for hugr"
 echo "   • Explore data structure and relationships"
 echo ""

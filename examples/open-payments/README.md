@@ -590,6 +590,32 @@ extend type ownership_information {
 }
 ```
 
+### Add catalog source to the data source
+
+```graphql
+query addCatalogSource {
+  core {
+    insert_catalog_sources(
+      name: "op2023_extra",
+      type: "uriFile",
+      description: "Open Payments data",
+      path: "/workspace/examples/open-payments/extra.graphql"
+    ) {
+      id
+      name
+      description
+      path
+    }
+    insert_catalogs(data:{
+      data_source_name: "op2023"
+      catalog_name: "op2023_extra"
+    }) {
+      success
+    }
+  }
+}
+```
+
 ### Querying across providers
 
 Now we can query the top 10 providers with their top 5 general payments, research payments and ownership information by invested amount
