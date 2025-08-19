@@ -195,7 +195,9 @@ if [ "$DETACHED" = true ]; then
     echo "   🗄️  PostgreSQL:     postgres://${POSTGRES_USER:-hugr}:${POSTGRES_PASSWORD:-hugr_password}@localhost:${POSTGRES_PORT:-5432}"
     echo "   🗄️  MySQL:          mysql://${MYSQL_USER:-hugr}:${MYSQL_PASSWORD:-hugr_password}@localhost:${MYSQL_PORT:-18036}"
     echo "   📦 MinIO Console:   http://localhost:${MINIO_CONSOLE_PORT:-18081} (${MINIO_USER:-minio_admin}/${MINIO_PASSWORD:-minio_password123})"
-    
+    echo "   🔒 Keycloak Admin:  http://localhost:${AUTH_PORT:-18070} (admin/${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin_password})"
+    echo "   🔒 Keycloak Realm:  http://localhost:${AUTH_PORT:-18070}/auth/realms/acme (client_id: hugr)"
+
     if [ "$CACHE" = true ]; then
         echo "   🔄 Redis Cache:     localhost:${REDIS_PORT:-18079}"
     fi

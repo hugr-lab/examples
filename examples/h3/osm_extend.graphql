@@ -1,0 +1,5 @@
+extend type osm_administrative_boundaries {
+  de_code: String @sql(
+    exp: "(tags->>'de:amtlicher_gemeindeschluessel')"
+  )
+}

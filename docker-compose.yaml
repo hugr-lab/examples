@@ -15,6 +15,7 @@ services:
       - "${POSTGRES_PORT:-18032}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hugr} -d ${POSTGRES_DB:-hugr}"]
       interval: 10s
@@ -145,7 +146,9 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      # Redis dependency только если кэш включен
+      # Redis dependency is optional, only if L2 cache is enabled
+      auth:
+        condition: service_healthy
     ports:
       - "${HUGR_PORT:-18000}:15000"
       - "${HUGR_METRICS_PORT:-18001}:14000"  # Metrics & health port
@@ -153,6 +156,7 @@ services:
       # Work directory and data volumes
       - .:/workspace
       - ./data/hugr:/hugr-data
+      - ./hugr/auth.yml:/auth.yml:ro
     working_dir: /workspace
     environment:
       # Server settings
@@ -212,6 +216,8 @@ services:
       HUGR_SCHEMA_FILE: ${HUGR_SCHEMA_FILE:-}
       EXAMPLE_NAME: ${EXAMPLE_NAME:-getting-started}
 
+      AUTH_CONFIG_FILE: "/auth.yml"
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:14000/health"]
       interval: 30s
@@ -220,7 +226,40 @@ services:
       start_period: 60s
     restart: unless-stopped
 
-  # Grafana для мониторинга
+  auth:
+    container_name: hugr-keycloak
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--http-relative-path=/", "--import-realm", "--http-port=8080", "--https-port=8443"]
+    environment:
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME_PORT: ${AUTH_PORT:-18070}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin_password}
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-hugr}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-hugr_password}
+    volumes:
+      - ./keycloak/realm-export:/opt/keycloak/data/import
+      - ./keycloak/HealthCheck.java:/opt/keycloak/HealthCheck.java:ro
+    healthcheck:
+      test: ["CMD-SHELL", "java /opt/keycloak/HealthCheck.java http://localhost:9000/health/ready"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${AUTH_PORT:-18070}:8080"
+      - "${AUTH_SSL_PORT:-18073}:8443"
+
+  # Grafana for monitoring and visualization
   grafana:
     image: grafana/grafana:latest
     container_name: hugr-grafana

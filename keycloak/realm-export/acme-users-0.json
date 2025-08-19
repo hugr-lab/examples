@@ -1,0 +1,65 @@
+{
+  "realm" : "acme",
+  "users" : [ {
+    "id" : "c9370a30-4533-477e-81e7-39169cf792af",
+    "username" : "admin",
+    "firstName" : "admin",
+    "lastName" : "admin",
+    "email" : "admin@hugr-lab.github.io",
+    "emailVerified" : true,
+    "attributes" : {
+      "hugr-role" : [ "admin" ]
+    },
+    "createdTimestamp" : 1754549780072,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "e448d6f7-3171-48ba-9e13-4466f5a4eb3e",
+      "type" : "password",
+      "userLabel" : "admin",
+      "createdDate" : 1754549830314,
+      "secretData" : "{\"value\":\"2VC57yJ/e6XnEQ5kuBHsfwqr9L+Lc8bcEZMyJZpKe/Y=\",\"salt\":\"O62U15j5Kx5obIFrgGjOdA==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-acme" ],
+    "clientRoles" : {
+      "realm-management" : [ "manage-authorization", "manage-identity-providers", "manage-events", "impersonation", "view-events", "manage-realm", "manage-clients", "view-users", "realm-admin", "query-realms", "view-authorization", "query-users", "query-clients", "manage-users", "create-client", "view-clients", "view-identity-providers", "query-groups", "view-realm" ],
+      "hugr" : [ "admin" ],
+      "broker" : [ "read-token" ],
+      "account" : [ "view-applications", "manage-account", "view-consent", "delete-account", "manage-consent", "manage-account-links", "view-profile", "view-groups" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "c6413a51-4f69-4ad8-a8d2-7d36be36ffcb",
+    "username" : "viewer",
+    "firstName" : "viewer",
+    "lastName" : "viewer",
+    "email" : "viewer@hugr-lab.github.io",
+    "emailVerified" : true,
+    "attributes" : {
+      "hugr-role" : [ "readonly" ]
+    },
+    "createdTimestamp" : 1754550100710,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "3c0a7526-55ab-40e5-a24d-7838c7bd2170",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1754564497510,
+      "secretData" : "{\"value\":\"AgfOrPnEWdwkoFMnroB7e0CbmKv0metO4vS+WC6kk+4=\",\"salt\":\"nf/2xCV1p13dp52KkSKkSQ==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-acme" ],
+    "clientRoles" : {
+      "hugr" : [ "viewer" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}

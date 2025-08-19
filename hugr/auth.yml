@@ -1,0 +1,11 @@
+anonymous:
+  allowed: true
+  role: "admin"
+
+oidc:
+  issuer: "http://auth:8080/realms/acme"
+  client_id: "hugr"
+  timeout: 60s
+  tls_insecure: true
+
+managed_api_keys: true
