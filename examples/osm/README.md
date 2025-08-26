@@ -286,7 +286,8 @@ mutation addDataBucket {
   function {
     core {
       storage {
-        register_s3(
+        register_object_storage(
+          type: "S3"
           endpoint: "minio:9000"
           key: "minio_admin" # replace with your MinIO access key
           name: "examples"
