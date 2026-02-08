@@ -1,0 +1,482 @@
+# Adventure Works - Production Schema
+# This schema defines the Production schema entities.
+
+"Units of measure for products."
+type UnitMeasure @table(name: "Production.UnitMeasure") @module(name: "production") {
+  "Unit measure code"
+  UnitMeasureCode: String! @pk
+  "Unit measure name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Top-level product categories."
+type ProductCategory @table(name: "Production.ProductCategory") @module(name: "production") {
+  "Unique identifier for the product category"
+  ProductCategoryID: Int! @pk
+  "Category name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product subcategories within categories."
+type ProductSubcategory @table(name: "Production.ProductSubcategory") @module(name: "production") {
+  "Unique identifier for the subcategory"
+  ProductSubcategoryID: Int! @pk
+  "Parent category reference"
+  ProductCategoryID: Int! @field_references(
+    name: "subcat_cat_fk"
+    references_name: "ProductCategory"
+    field: "ProductCategoryID"
+    query: "category"
+    description: "Parent category"
+    references_query: "subcategories"
+    references_description: "Subcategories"
+  )
+  "Subcategory name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product model/design templates."
+type ProductModel @table(name: "Production.ProductModel") @module(name: "production") {
+  "Unique identifier for the product model"
+  ProductModelID: Int! @pk
+  "Model name"
+  Name: String!
+  "Catalog description"
+  CatalogDescription: String
+  "Manufacturing instructions"
+  Instructions: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Products sold or used in manufacturing."
+type Product @table(name: "Production.Product") @module(name: "production") {
+  "Unique identifier for the product"
+  ProductID: Int! @pk
+  "Product name"
+  Name: String!
+  "Product number/SKU"
+  ProductNumber: String!
+  "Flag: product is manufactured in-house"
+  MakeFlag: Boolean!
+  "Flag: product is a finished good"
+  FinishedGoodsFlag: Boolean!
+  "Product color"
+  Color: String
+  "Safety stock level"
+  SafetyStockLevel: Int!
+  "Reorder point"
+  ReorderPoint: Int!
+  "Standard manufacturing cost"
+  StandardCost: Float!
+  "List price"
+  ListPrice: Float!
+  "Product size"
+  Size: String
+  "Size unit measure code"
+  SizeUnitMeasureCode: String @field_references(
+    name: "product_size_unit_fk"
+    references_name: "UnitMeasure"
+    field: "UnitMeasureCode"
+    query: "size_unit"
+    description: "Size unit"
+    references_query: "products_by_size"
+    references_description: "Products using this size unit"
+  )
+  "Weight unit measure code"
+  WeightUnitMeasureCode: String @field_references(
+    name: "product_weight_unit_fk"
+    references_name: "UnitMeasure"
+    field: "UnitMeasureCode"
+    query: "weight_unit"
+    description: "Weight unit"
+    references_query: "products_by_weight"
+    references_description: "Products using this weight unit"
+  )
+  "Product weight"
+  Weight: Float
+  "Days to manufacture"
+  DaysToManufacture: Int!
+  "Product line (R=Road, M=Mountain, T=Touring, S=Standard)"
+  ProductLine: String
+  "Product class (H=High, M=Medium, L=Low)"
+  Class: String
+  "Product style (U=Unisex, M=Men, W=Women)"
+  Style: String
+  "Subcategory reference"
+  ProductSubcategoryID: Int @field_references(
+    name: "product_subcat_fk"
+    references_name: "ProductSubcategory"
+    field: "ProductSubcategoryID"
+    query: "subcategory"
+    description: "Product subcategory"
+    references_query: "products"
+    references_description: "Products in this subcategory"
+  )
+  "Model reference"
+  ProductModelID: Int @field_references(
+    name: "product_model_fk"
+    references_name: "ProductModel"
+    field: "ProductModelID"
+    query: "model"
+    description: "Product model"
+    references_query: "products"
+    references_description: "Products using this model"
+  )
+  "Sell start date"
+  SellStartDate: Timestamp!
+  "Sell end date"
+  SellEndDate: Timestamp
+  "Discontinued date"
+  DiscontinuedDate: Timestamp
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product descriptions."
+type ProductDescription @table(name: "Production.ProductDescription") @module(name: "production") {
+  "Unique identifier"
+  ProductDescriptionID: Int! @pk
+  "Description text"
+  Description: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Languages/cultures for localization."
+type Culture @table(name: "Production.Culture") @module(name: "production") {
+  "Culture code"
+  CultureID: String! @pk
+  "Culture name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Localized product descriptions."
+type ProductModelProductDescriptionCulture @table(name: "Production.ProductModelProductDescriptionCulture") @module(name: "production") {
+  "Product model reference"
+  ProductModelID: Int! @pk @field_references(
+    name: "pmpdc_model_fk"
+    references_name: "ProductModel"
+    field: "ProductModelID"
+    query: "model"
+    description: "Product model"
+    references_query: "localized_descriptions"
+    references_description: "Localized descriptions"
+  )
+  "Product description reference"
+  ProductDescriptionID: Int! @pk @field_references(
+    name: "pmpdc_desc_fk"
+    references_name: "ProductDescription"
+    field: "ProductDescriptionID"
+    query: "description"
+    description: "Description"
+    references_query: "model_cultures"
+    references_description: "Model/culture associations"
+  )
+  "Culture reference"
+  CultureID: String! @pk @field_references(
+    name: "pmpdc_culture_fk"
+    references_name: "Culture"
+    field: "CultureID"
+    query: "culture"
+    description: "Culture/language"
+    references_query: "product_descriptions"
+    references_description: "Product descriptions in this culture"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Inventory storage locations."
+type Location @table(name: "Production.Location") @module(name: "production") {
+  "Unique identifier for the location"
+  LocationID: Int! @pk
+  "Location name"
+  Name: String!
+  "Cost rate per hour"
+  CostRate: Float!
+  "Work center availability hours"
+  Availability: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product inventory at locations."
+type ProductInventory @table(name: "Production.ProductInventory") @module(name: "production") {
+  "Product reference"
+  ProductID: Int! @pk @field_references(
+    name: "inv_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "inventory"
+    references_description: "Inventory records"
+  )
+  "Location reference"
+  LocationID: Int! @pk @field_references(
+    name: "inv_location_fk"
+    references_name: "Location"
+    field: "LocationID"
+    query: "location"
+    description: "Storage location"
+    references_query: "inventory"
+    references_description: "Inventory at this location"
+  )
+  "Shelf identifier"
+  Shelf: String!
+  "Bin number"
+  Bin: Int!
+  "Quantity on hand"
+  Quantity: Int!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product standard cost history."
+type ProductCostHistory @table(name: "Production.ProductCostHistory") @module(name: "production") {
+  "Product reference"
+  ProductID: Int! @pk @field_references(
+    name: "pch_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "cost_history"
+    references_description: "Cost history"
+  )
+  "Start date of cost"
+  StartDate: Timestamp! @pk
+  "End date of cost"
+  EndDate: Timestamp
+  "Standard cost"
+  StandardCost: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product list price history."
+type ProductListPriceHistory @table(name: "Production.ProductListPriceHistory") @module(name: "production") {
+  "Product reference"
+  ProductID: Int! @pk @field_references(
+    name: "plph_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "price_history"
+    references_description: "Price history"
+  )
+  "Start date of price"
+  StartDate: Timestamp! @pk
+  "End date of price"
+  EndDate: Timestamp
+  "List price"
+  ListPrice: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Customer product reviews."
+type ProductReview @table(name: "Production.ProductReview") @module(name: "production") {
+  "Unique identifier for the review"
+  ProductReviewID: Int! @pk
+  "Product reference"
+  ProductID: Int! @field_references(
+    name: "review_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Reviewed product"
+    references_query: "reviews"
+    references_description: "Product reviews"
+  )
+  "Reviewer name"
+  ReviewerName: String!
+  "Review date"
+  ReviewDate: Timestamp!
+  "Reviewer email"
+  EmailAddress: String!
+  "Rating (1-5)"
+  Rating: Int!
+  "Review comments"
+  Comments: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Manufacturing scrap reasons."
+type ScrapReason @table(name: "Production.ScrapReason") @module(name: "production") {
+  "Unique identifier for the scrap reason"
+  ScrapReasonID: Int! @pk
+  "Scrap reason name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Manufacturing work orders."
+type WorkOrder @table(name: "Production.WorkOrder") @module(name: "production") {
+  "Unique identifier for the work order"
+  WorkOrderID: Int! @pk
+  "Product being manufactured"
+  ProductID: Int! @field_references(
+    name: "wo_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "work_orders"
+    references_description: "Work orders"
+  )
+  "Order quantity"
+  OrderQty: Int!
+  "Scrapped quantity"
+  ScrappedQty: Int!
+  "Start date"
+  StartDate: Timestamp!
+  "End date"
+  EndDate: Timestamp
+  "Due date"
+  DueDate: Timestamp!
+  "Scrap reason reference"
+  ScrapReasonID: Int @field_references(
+    name: "wo_scrap_fk"
+    references_name: "ScrapReason"
+    field: "ScrapReasonID"
+    query: "scrap_reason"
+    description: "Scrap reason"
+    references_query: "work_orders"
+    references_description: "Work orders with this scrap reason"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Work order routing through manufacturing locations."
+type WorkOrderRouting @table(name: "Production.WorkOrderRouting") @module(name: "production") {
+  "Work order reference"
+  WorkOrderID: Int! @pk @field_references(
+    name: "wor_order_fk"
+    references_name: "WorkOrder"
+    field: "WorkOrderID"
+    query: "work_order"
+    description: "Work order"
+    references_query: "routing"
+    references_description: "Routing steps"
+  )
+  "Product reference"
+  ProductID: Int! @pk
+  "Operation sequence"
+  OperationSequence: Int! @pk
+  "Location reference"
+  LocationID: Int! @field_references(
+    name: "wor_location_fk"
+    references_name: "Location"
+    field: "LocationID"
+    query: "location"
+    description: "Manufacturing location"
+    references_query: "work_order_routing"
+    references_description: "Work orders at this location"
+  )
+  "Scheduled start date"
+  ScheduledStartDate: Timestamp!
+  "Scheduled end date"
+  ScheduledEndDate: Timestamp!
+  "Actual start date"
+  ActualStartDate: Timestamp
+  "Actual end date"
+  ActualEndDate: Timestamp
+  "Actual resource hours"
+  ActualResourceHrs: Float
+  "Planned cost"
+  PlannedCost: Float!
+  "Actual cost"
+  ActualCost: Float
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Bill of materials for product assembly."
+type BillOfMaterials @table(name: "Production.BillOfMaterials") @module(name: "production") {
+  "Unique identifier"
+  BillOfMaterialsID: Int! @pk
+  "Assembly product reference"
+  ProductAssemblyID: Int @field_references(
+    name: "bom_assembly_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "assembly"
+    description: "Assembly product"
+    references_query: "used_in_assemblies"
+    references_description: "BOMs where this is the assembly"
+  )
+  "Component product reference"
+  ComponentID: Int! @field_references(
+    name: "bom_component_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "component"
+    description: "Component product"
+    references_query: "component_of"
+    references_description: "BOMs where this is a component"
+  )
+  "Start date"
+  StartDate: Timestamp!
+  "End date"
+  EndDate: Timestamp
+  "Unit measure code"
+  UnitMeasureCode: String! @field_references(
+    name: "bom_unit_fk"
+    references_name: "UnitMeasure"
+    field: "UnitMeasureCode"
+    query: "unit_measure"
+    description: "Unit measure"
+    references_query: "bill_of_materials"
+    references_description: "BOMs using this unit"
+  )
+  "BOM level"
+  BOMLevel: Int!
+  "Quantity per assembly"
+  PerAssemblyQty: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product transaction history."
+type TransactionHistory @table(name: "Production.TransactionHistory") @module(name: "production") {
+  "Unique identifier for the transaction"
+  TransactionID: Int! @pk
+  "Product reference"
+  ProductID: Int! @field_references(
+    name: "th_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "transactions"
+    references_description: "Transactions"
+  )
+  "Reference order ID"
+  ReferenceOrderID: Int!
+  "Reference order line ID"
+  ReferenceOrderLineID: Int!
+  "Transaction date"
+  TransactionDate: Timestamp!
+  "Transaction type (W=Work Order, S=Sales, P=Purchase)"
+  TransactionType: String!
+  "Quantity"
+  Quantity: Int!
+  "Actual cost"
+  ActualCost: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}

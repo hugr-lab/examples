@@ -44,3 +44,16 @@ In this example we will set up a Northwind database on PostgreSQL and create Gra
 
 In this example we will create an empty data PostgreSQL data base, describe it in GraphQL SDL and attach it into Hugr as a data source.
 Folder: postgres-examples/
+
+### 3. MSSQL Adventure Works Example
+
+Folder: mssql/
+
+This example demonstrates how to use hugr with Microsoft SQL Server as a data source, featuring the Adventure Works Lightweight (LT) sample database. It showcases:
+- MSSQL data source configuration with the `mssql://` URI format
+- DuckDB MSSQL extension with projection and filter pushdown
+- GraphQL schema patterns: `@table`, `@pk`, `@field_references`
+- Hierarchical data (self-referencing categories)
+- Many-to-many relationships (CustomerAddress junction table)
+
+**Note**: Requires amd64 platform (Intel/AMD processor).

@@ -68,6 +68,29 @@ services:
       --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
     restart: unless-stopped
 
+  # Microsoft SQL Server (only starts with --profile mssql, requires amd64)
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hugr-mssql
+    platform: linux/amd64
+    profiles:
+      - mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong@Passw0rd}
+      MSSQL_PID: Developer
+    ports:
+      - "${MSSQL_PORT:-18033}:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"${MSSQL_SA_PASSWORD:-YourStrong@Passw0rd}\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
   # Redis for L2 caching (only starts if CACHE_L2_ENABLED=true)
   redis:
     image: redis:7-alpine
@@ -293,6 +316,8 @@ volumes:
   postgres_data:
     driver: local
   mysql_data:
+    driver: local
+  mssql_data:
     driver: local
   redis_data:
     driver: local
