@@ -1,0 +1,188 @@
+# Adventure Works - Purchasing Schema
+# This schema defines the Purchasing schema entities.
+
+"Shipping methods with rates."
+type ShipMethod @table(name: "Purchasing.ShipMethod") @module(name: "purchasing") {
+  "Unique identifier for the ship method"
+  ShipMethodID: Int! @pk
+  "Ship method name"
+  Name: String!
+  "Base shipping charge"
+  ShipBase: Float!
+  "Shipping rate per unit"
+  ShipRate: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Product vendors/suppliers."
+type Vendor @table(name: "Purchasing.Vendor") @module(name: "purchasing") {
+  "Business entity reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "vendor_entity_fk"
+    references_name: "BusinessEntity"
+    field: "BusinessEntityID"
+    query: "business_entity"
+    description: "Business entity"
+    references_query: "vendor"
+    references_description: "Vendor details"
+  )
+  "Vendor account number"
+  AccountNumber: String!
+  "Vendor name"
+  Name: String!
+  "Credit rating (1-5)"
+  CreditRating: Int!
+  "Preferred vendor flag"
+  PreferredVendorStatus: Boolean!
+  "Active vendor flag"
+  ActiveFlag: Boolean!
+  "Purchasing web service URL"
+  PurchasingWebServiceURL: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Products supplied by vendors."
+type ProductVendor @table(name: "Purchasing.ProductVendor") @module(name: "purchasing") {
+  "Product reference"
+  ProductID: Int! @pk @field_references(
+    name: "pv_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "vendors"
+    references_description: "Vendors supplying this product"
+  )
+  "Vendor reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "pv_vendor_fk"
+    references_name: "Vendor"
+    field: "BusinessEntityID"
+    query: "vendor"
+    description: "Vendor"
+    references_query: "products"
+    references_description: "Products from this vendor"
+  )
+  "Average lead time in days"
+  AverageLeadTime: Int!
+  "Standard price"
+  StandardPrice: Float!
+  "Last receipt cost"
+  LastReceiptCost: Float
+  "Last receipt date"
+  LastReceiptDate: Timestamp
+  "Minimum order quantity"
+  MinOrderQty: Int!
+  "Maximum order quantity"
+  MaxOrderQty: Int!
+  "Quantity on order"
+  OnOrderQty: Int
+  "Unit measure code"
+  UnitMeasureCode: String! @field_references(
+    name: "pv_unit_fk"
+    references_name: "UnitMeasure"
+    field: "UnitMeasureCode"
+    query: "unit_measure"
+    description: "Unit measure"
+    references_query: "product_vendors"
+    references_description: "Product vendors using this unit"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Purchase order headers."
+type PurchaseOrderHeader @table(name: "Purchasing.PurchaseOrderHeader") @module(name: "purchasing") {
+  "Unique identifier for the purchase order"
+  PurchaseOrderID: Int! @pk
+  "Revision number"
+  RevisionNumber: Int!
+  "Order status (1-4)"
+  Status: Int!
+  "Employee who created the order"
+  EmployeeID: Int! @field_references(
+    name: "poh_employee_fk"
+    references_name: "Employee"
+    field: "BusinessEntityID"
+    query: "employee"
+    description: "Ordering employee"
+    references_query: "purchase_orders"
+    references_description: "Purchase orders created"
+  )
+  "Vendor reference"
+  VendorID: Int! @field_references(
+    name: "poh_vendor_fk"
+    references_name: "Vendor"
+    field: "BusinessEntityID"
+    query: "vendor"
+    description: "Vendor"
+    references_query: "purchase_orders"
+    references_description: "Purchase orders from this vendor"
+  )
+  "Ship method reference"
+  ShipMethodID: Int! @field_references(
+    name: "poh_ship_fk"
+    references_name: "ShipMethod"
+    field: "ShipMethodID"
+    query: "ship_method"
+    description: "Ship method"
+    references_query: "purchase_orders"
+    references_description: "Purchase orders using this method"
+  )
+  "Order date"
+  OrderDate: Timestamp!
+  "Ship date"
+  ShipDate: Timestamp
+  "Subtotal"
+  SubTotal: Float!
+  "Tax amount"
+  TaxAmt: Float!
+  "Freight"
+  Freight: Float!
+  "Total due (computed)"
+  TotalDue: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Purchase order line items."
+type PurchaseOrderDetail @table(name: "Purchasing.PurchaseOrderDetail") @module(name: "purchasing") {
+  "Purchase order reference"
+  PurchaseOrderID: Int! @pk @field_references(
+    name: "pod_order_fk"
+    references_name: "PurchaseOrderHeader"
+    field: "PurchaseOrderID"
+    query: "order"
+    description: "Purchase order"
+    references_query: "details"
+    references_description: "Line items"
+  )
+  "Line item identifier"
+  PurchaseOrderDetailID: Int! @pk
+  "Due date"
+  DueDate: Timestamp!
+  "Order quantity"
+  OrderQty: Int!
+  "Product reference"
+  ProductID: Int! @field_references(
+    name: "pod_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "purchase_order_details"
+    references_description: "Purchase order details"
+  )
+  "Unit price"
+  UnitPrice: Float!
+  "Line total (computed)"
+  LineTotal: Float!
+  "Received quantity"
+  ReceivedQty: Float!
+  "Rejected quantity"
+  RejectedQty: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}

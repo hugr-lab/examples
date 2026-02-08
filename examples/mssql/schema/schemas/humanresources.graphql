@@ -1,0 +1,148 @@
+# Adventure Works - Human Resources Schema
+# This schema defines the HumanResources schema entities.
+
+"Company departments organized by group."
+type Department @table(name: "HumanResources.Department") @module(name: "hr") {
+  "Unique identifier for the department"
+  DepartmentID: Int! @pk
+  "Department name"
+  Name: String!
+  "Group name (Research and Development, Sales and Marketing, etc.)"
+  GroupName: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Work shifts with start and end times."
+type Shift @table(name: "HumanResources.Shift") @module(name: "hr") {
+  "Unique identifier for the shift"
+  ShiftID: Int! @pk
+  "Shift name"
+  Name: String!
+  "Shift start time"
+  StartTime: String!
+  "Shift end time"
+  EndTime: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Employee records with job and personal information."
+type Employee @table(name: "HumanResources.Employee") @module(name: "hr") {
+  "Business entity/person reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "employee_person_fk"
+    references_name: "Person"
+    field: "BusinessEntityID"
+    query: "person"
+    description: "Person details"
+    references_query: "employee"
+    references_description: "Employee record"
+  )
+  "National ID number"
+  NationalIDNumber: String!
+  "Login ID (domain\\username)"
+  LoginID: String!
+  "Job title"
+  JobTitle: String!
+  "Birth date"
+  BirthDate: String!
+  "Marital status (S=Single, M=Married)"
+  MaritalStatus: String!
+  "Gender (M=Male, F=Female)"
+  Gender: String!
+  "Hire date"
+  HireDate: String!
+  "Salaried employee flag"
+  SalariedFlag: Boolean!
+  "Available vacation hours"
+  VacationHours: Int!
+  "Available sick leave hours"
+  SickLeaveHours: Int!
+  "Current employee flag"
+  CurrentFlag: Boolean!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Employee department assignment history."
+type EmployeeDepartmentHistory @table(name: "HumanResources.EmployeeDepartmentHistory") @module(name: "hr") {
+  "Employee reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "edh_employee_fk"
+    references_name: "Employee"
+    field: "BusinessEntityID"
+    query: "employee"
+    description: "Employee"
+    references_query: "department_history"
+    references_description: "Department history"
+  )
+  "Department reference"
+  DepartmentID: Int! @pk @field_references(
+    name: "edh_department_fk"
+    references_name: "Department"
+    field: "DepartmentID"
+    query: "department"
+    description: "Department"
+    references_query: "employee_history"
+    references_description: "Employee history"
+  )
+  "Shift reference"
+  ShiftID: Int! @pk @field_references(
+    name: "edh_shift_fk"
+    references_name: "Shift"
+    field: "ShiftID"
+    query: "shift"
+    description: "Shift"
+    references_query: "employee_history"
+    references_description: "Employee history"
+  )
+  "Assignment start date"
+  StartDate: String! @pk
+  "Assignment end date"
+  EndDate: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Employee pay rate history."
+type EmployeePayHistory @table(name: "HumanResources.EmployeePayHistory") @module(name: "hr") {
+  "Employee reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "eph_employee_fk"
+    references_name: "Employee"
+    field: "BusinessEntityID"
+    query: "employee"
+    description: "Employee"
+    references_query: "pay_history"
+    references_description: "Pay history"
+  )
+  "Rate change date"
+  RateChangeDate: Timestamp! @pk
+  "Pay rate"
+  Rate: Float!
+  "Pay frequency (1=Monthly, 2=Biweekly)"
+  PayFrequency: Int!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Job applicants."
+type JobCandidate @table(name: "HumanResources.JobCandidate") @module(name: "hr") {
+  "Unique identifier for the job candidate"
+  JobCandidateID: Int! @pk
+  "Employee reference if hired"
+  BusinessEntityID: Int @field_references(
+    name: "jc_employee_fk"
+    references_name: "Employee"
+    field: "BusinessEntityID"
+    query: "employee"
+    description: "Hired employee"
+    references_query: "job_application"
+    references_description: "Job application"
+  )
+  "Resume text"
+  Resume: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}

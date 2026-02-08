@@ -1,0 +1,268 @@
+# Adventure Works LT GraphQL Schema for MSSQL
+# This schema defines the SalesLT tables from the Adventure Works Lightweight database
+
+# Product categories with hierarchical structure (self-referencing)
+"Hierarchical classification of products. Categories can have parent categories forming a tree structure."
+type ProductCategory @table(name: "SalesLT.ProductCategory") {
+  "Unique identifier for the product category"
+  ProductCategoryID: Int! @pk
+  "Reference to parent category (null for root categories)"
+  ParentProductCategoryID: Int @field_references(
+    name: "category_parent_fk"
+    references_name: "ProductCategory"
+    field: "ProductCategoryID"
+    query: "parent_category"
+    description: "Parent category in the hierarchy"
+    references_query: "subcategories"
+    references_description: "Child categories under this category"
+  )
+  "Category display name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Product models - design templates grouping product variants
+"Product design templates that group similar product variants together."
+type ProductModel @table(name: "SalesLT.ProductModel") {
+  "Unique identifier for the product model"
+  ProductModelID: Int! @pk
+  "Model display name"
+  Name: String!
+  "XML catalog description (stored as text)"
+  CatalogDescription: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Products available for sale
+"Merchandise items available for sale in the catalog."
+type Product @table(name: "SalesLT.Product") {
+  "Unique identifier for the product"
+  ProductID: Int! @pk
+  "Product display name"
+  Name: String!
+  "Product SKU/stock keeping unit"
+  ProductNumber: String!
+  "Product color (if applicable)"
+  Color: String
+  "Manufacturing cost"
+  StandardCost: Float!
+  "Retail selling price"
+  ListPrice: Float!
+  "Product size designation"
+  Size: String
+  "Product weight in pounds"
+  Weight: Float
+  "Category classification"
+  ProductCategoryID: Int @field_references(
+    name: "product_category_fk"
+    references_name: "ProductCategory"
+    field: "ProductCategoryID"
+    query: "category"
+    description: "Product category"
+    references_query: "products"
+    references_description: "Products in this category"
+  )
+  "Product model/design template"
+  ProductModelID: Int @field_references(
+    name: "product_model_fk"
+    references_name: "ProductModel"
+    field: "ProductModelID"
+    query: "model"
+    description: "Product model"
+    references_query: "products"
+    references_description: "Products using this model"
+  )
+  "Date product became available for sale"
+  SellStartDate: Timestamp!
+  "Date product was removed from sale (null if still active)"
+  SellEndDate: Timestamp
+  "Date product was discontinued"
+  DiscontinuedDate: Timestamp
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Customers - persons or businesses who purchase products
+"Customer records for individuals and businesses who purchase products."
+type Customer @table(name: "SalesLT.Customer") {
+  "Unique identifier for the customer"
+  CustomerID: Int! @pk
+  "Name prefix (Mr., Ms., Dr., etc.)"
+  Title: String
+  "Customer first name"
+  FirstName: String!
+  "Customer middle name"
+  MiddleName: String
+  "Customer last name"
+  LastName: String!
+  "Name suffix (Jr., Sr., III, etc.)"
+  Suffix: String
+  "Company name for business customers"
+  CompanyName: String
+  "Assigned sales representative email"
+  SalesPerson: String
+  "Customer email address"
+  EmailAddress: String
+  "Customer phone number"
+  Phone: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Addresses for shipping and billing
+"Physical addresses for shipping and billing purposes."
+type Address @table(name: "SalesLT.Address") {
+  "Unique identifier for the address"
+  AddressID: Int! @pk
+  "Street address line 1"
+  AddressLine1: String!
+  "Street address line 2 (apartment, suite, etc.)"
+  AddressLine2: String
+  "City name"
+  City: String!
+  "State or province name"
+  StateProvince: String!
+  "Country or region name"
+  CountryRegion: String!
+  "Postal or ZIP code"
+  PostalCode: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Junction table linking customers to their addresses (many-to-many)
+"Association between customers and their addresses with address type classification."
+type CustomerAddress @table(name: "SalesLT.CustomerAddress") {
+  "Customer reference"
+  CustomerID: Int! @pk @field_references(
+    name: "customer_address_customer_fk"
+    references_name: "Customer"
+    field: "CustomerID"
+    query: "customer"
+    description: "Customer who owns this address"
+    references_query: "addresses"
+    references_description: "Addresses associated with this customer"
+  )
+  "Address reference"
+  AddressID: Int! @pk @field_references(
+    name: "customer_address_address_fk"
+    references_name: "Address"
+    field: "AddressID"
+    query: "address"
+    description: "Address details"
+    references_query: "customers"
+    references_description: "Customers using this address"
+  )
+  "Address type (Main Office, Shipping, Billing, etc.)"
+  AddressType: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Sales order header - main order record
+"Sales order transaction header containing order metadata and totals."
+type SalesOrderHeader @table(name: "SalesLT.SalesOrderHeader") {
+  "Unique identifier for the sales order"
+  SalesOrderID: Int! @pk
+  "Order revision number for tracking changes"
+  RevisionNumber: Int!
+  "Date the order was placed"
+  OrderDate: Timestamp!
+  "Expected delivery date"
+  DueDate: Timestamp!
+  "Actual ship date (null if not yet shipped)"
+  ShipDate: Timestamp
+  "Order status: 1=In Process, 2=Approved, 3=Backordered, 4=Rejected, 5=Shipped, 6=Cancelled"
+  Status: Int!
+  "True if order was placed online"
+  OnlineOrderFlag: Boolean!
+  "Sales order number (computed: SO + SalesOrderID)"
+  SalesOrderNumber: String!
+  "Customer purchase order reference"
+  PurchaseOrderNumber: String
+  "Customer account number"
+  AccountNumber: String
+  "Customer who placed the order"
+  CustomerID: Int! @field_references(
+    name: "order_customer_fk"
+    references_name: "Customer"
+    field: "CustomerID"
+    query: "customer"
+    description: "Customer who placed this order"
+    references_query: "orders"
+    references_description: "Orders placed by this customer"
+  )
+  "Shipping address"
+  ShipToAddressID: Int @field_references(
+    name: "order_ship_address_fk"
+    references_name: "Address"
+    field: "AddressID"
+    query: "ship_to_address"
+    description: "Shipping destination address"
+    references_query: "ship_to_orders"
+    references_description: "Orders shipped to this address"
+  )
+  "Billing address"
+  BillToAddressID: Int @field_references(
+    name: "order_bill_address_fk"
+    references_name: "Address"
+    field: "AddressID"
+    query: "bill_to_address"
+    description: "Billing address"
+    references_query: "bill_to_orders"
+    references_description: "Orders billed to this address"
+  )
+  "Shipping method name"
+  ShipMethod: String!
+  "Order subtotal before tax and freight"
+  SubTotal: Float!
+  "Tax amount"
+  TaxAmt: Float!
+  "Freight/shipping cost"
+  Freight: Float!
+  "Total amount due (computed: SubTotal + TaxAmt + Freight)"
+  TotalDue: Float!
+  "Order comments or notes"
+  Comment: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+# Sales order detail - line items
+"Individual line items within a sales order."
+type SalesOrderDetail @table(name: "SalesLT.SalesOrderDetail") {
+  "Sales order reference"
+  SalesOrderID: Int! @pk @field_references(
+    name: "detail_order_fk"
+    references_name: "SalesOrderHeader"
+    field: "SalesOrderID"
+    query: "order"
+    description: "Parent sales order"
+    references_query: "details"
+    references_description: "Line items in this order"
+  )
+  "Line item identifier within the order"
+  SalesOrderDetailID: Int! @pk
+  "Quantity ordered"
+  OrderQty: Int!
+  "Product being ordered"
+  ProductID: Int! @field_references(
+    name: "detail_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product ordered"
+    references_query: "order_details"
+    references_description: "Order line items for this product"
+  )
+  "Price per unit at time of order"
+  UnitPrice: Float!
+  "Discount applied (0.0 to 1.0)"
+  UnitPriceDiscount: Float!
+  "Computed line total: UnitPrice * (1 - UnitPriceDiscount) * OrderQty"
+  LineTotal: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}

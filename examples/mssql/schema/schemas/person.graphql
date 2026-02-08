@@ -1,0 +1,262 @@
+# Adventure Works - Person Schema
+# This schema defines the Person schema entities.
+
+"Base entity for all persons, stores, and vendors in the system."
+type BusinessEntity @table(name: "Person.BusinessEntity") @module(name: "person") {
+  "Unique identifier for the business entity"
+  BusinessEntityID: Int! @pk
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Classification of address types (Home, Office, Billing, Shipping, etc.)."
+type AddressType @table(name: "Person.AddressType") @module(name: "person") {
+  "Unique identifier for the address type"
+  AddressTypeID: Int! @pk
+  "Address type name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Country and region lookup table."
+type CountryRegion @table(name: "Person.CountryRegion") @module(name: "person") {
+  "ISO country/region code"
+  CountryRegionCode: String! @pk
+  "Country/region name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"State and province lookup with territory assignment."
+type StateProvince @table(name: "Person.StateProvince") @module(name: "person") {
+  "Unique identifier for the state/province"
+  StateProvinceID: Int! @pk
+  "State/province code"
+  StateProvinceCode: String!
+  "Country/region reference"
+  CountryRegionCode: String! @field_references(
+    name: "state_country_fk"
+    references_name: "CountryRegion"
+    field: "CountryRegionCode"
+    query: "country"
+    description: "Country this state belongs to"
+    references_query: "states"
+    references_description: "States in this country"
+  )
+  "Flag indicating this is the only state/province"
+  IsOnlyStateProvinceFlag: Boolean!
+  "State/province name"
+  Name: String!
+  "Sales territory reference"
+  TerritoryID: Int @field_references(
+    name: "state_territory_fk"
+    references_name: "SalesTerritory"
+    field: "TerritoryID"
+    query: "territory"
+    description: "Sales territory"
+    references_query: "states"
+    references_description: "States in this territory"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Physical street addresses."
+type Address @table(name: "Person.Address") @module(name: "person") {
+  "Unique identifier for the address"
+  AddressID: Int! @pk
+  "Street address line 1"
+  AddressLine1: String!
+  "Street address line 2"
+  AddressLine2: String
+  "City name"
+  City: String!
+  "State/province reference"
+  StateProvinceID: Int! @field_references(
+    name: "address_state_fk"
+    references_name: "StateProvince"
+    field: "StateProvinceID"
+    query: "state_province"
+    description: "State/province"
+    references_query: "addresses"
+    references_description: "Addresses in this state"
+  )
+  "Postal/ZIP code"
+  PostalCode: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Types of business contacts."
+type ContactType @table(name: "Person.ContactType") @module(name: "person") {
+  "Unique identifier for the contact type"
+  ContactTypeID: Int! @pk
+  "Contact type name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Types of phone numbers (Cell, Home, Work)."
+type PhoneNumberType @table(name: "Person.PhoneNumberType") @module(name: "person") {
+  "Unique identifier for the phone number type"
+  PhoneNumberTypeID: Int! @pk
+  "Phone number type name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Human beings including employees, customers, and contacts."
+type Person @table(name: "Person.Person") @module(name: "person") {
+  "Business entity reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "person_entity_fk"
+    references_name: "BusinessEntity"
+    field: "BusinessEntityID"
+    query: "business_entity"
+    description: "Business entity"
+    references_query: "person"
+    references_description: "Person details"
+  )
+  "Person type code (EM=Employee, SC=Store Contact, IN=Individual)"
+  PersonType: String!
+  "Name style (0=Western, 1=Eastern)"
+  NameStyle: Boolean!
+  "Title prefix (Mr., Ms., Dr.)"
+  Title: String
+  "First name"
+  FirstName: String!
+  "Middle name"
+  MiddleName: String
+  "Last name"
+  LastName: String!
+  "Name suffix (Jr., Sr., III)"
+  Suffix: String
+  "Email promotion preference (0=None, 1=Some, 2=All)"
+  EmailPromotion: Int!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Email addresses for persons."
+type EmailAddress @table(name: "Person.EmailAddress") @module(name: "person") {
+  "Person reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "email_person_fk"
+    references_name: "Person"
+    field: "BusinessEntityID"
+    query: "person"
+    description: "Person"
+    references_query: "email_addresses"
+    references_description: "Email addresses"
+  )
+  "Email address identifier"
+  EmailAddressID: Int! @pk
+  "Email address"
+  EmailAddress: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Phone numbers for persons."
+type PersonPhone @table(name: "Person.PersonPhone") @module(name: "person") {
+  "Person reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "phone_person_fk"
+    references_name: "Person"
+    field: "BusinessEntityID"
+    query: "person"
+    description: "Person"
+    references_query: "phone_numbers"
+    references_description: "Phone numbers"
+  )
+  "Phone number"
+  PhoneNumber: String! @pk
+  "Phone number type reference"
+  PhoneNumberTypeID: Int! @pk @field_references(
+    name: "phone_type_fk"
+    references_name: "PhoneNumberType"
+    field: "PhoneNumberTypeID"
+    query: "phone_type"
+    description: "Phone number type"
+    references_query: "phones"
+    references_description: "Phones of this type"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Links business entities to their addresses."
+type BusinessEntityAddress @table(name: "Person.BusinessEntityAddress") @module(name: "person") {
+  "Business entity reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "bea_entity_fk"
+    references_name: "BusinessEntity"
+    field: "BusinessEntityID"
+    query: "business_entity"
+    description: "Business entity"
+    references_query: "addresses"
+    references_description: "Addresses"
+  )
+  "Address reference"
+  AddressID: Int! @pk @field_references(
+    name: "bea_address_fk"
+    references_name: "Address"
+    field: "AddressID"
+    query: "address"
+    description: "Address"
+    references_query: "business_entities"
+    references_description: "Business entities at this address"
+  )
+  "Address type reference"
+  AddressTypeID: Int! @pk @field_references(
+    name: "bea_type_fk"
+    references_name: "AddressType"
+    field: "AddressTypeID"
+    query: "address_type"
+    description: "Address type"
+    references_query: "business_entity_addresses"
+    references_description: "Business entity addresses of this type"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Business contacts for business entities."
+type BusinessEntityContact @table(name: "Person.BusinessEntityContact") @module(name: "person") {
+  "Business entity reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "bec_entity_fk"
+    references_name: "BusinessEntity"
+    field: "BusinessEntityID"
+    query: "business_entity"
+    description: "Business entity"
+    references_query: "contacts"
+    references_description: "Contacts"
+  )
+  "Person reference"
+  PersonID: Int! @pk @field_references(
+    name: "bec_person_fk"
+    references_name: "Person"
+    field: "BusinessEntityID"
+    query: "contact_person"
+    description: "Contact person"
+    references_query: "contact_roles"
+    references_description: "Contact roles"
+  )
+  "Contact type reference"
+  ContactTypeID: Int! @pk @field_references(
+    name: "bec_type_fk"
+    references_name: "ContactType"
+    field: "ContactTypeID"
+    query: "contact_type"
+    description: "Contact type"
+    references_query: "business_contacts"
+    references_description: "Business contacts of this type"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}

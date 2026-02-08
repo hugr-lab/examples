@@ -1,0 +1,578 @@
+# Adventure Works - Sales Schema
+# This schema defines the Sales schema entities.
+
+"Sales territories by region."
+type SalesTerritory @table(name: "Sales.SalesTerritory") @module(name: "sales") {
+  "Unique identifier for the territory"
+  TerritoryID: Int! @pk
+  "Territory name"
+  Name: String!
+  "Country/region code"
+  CountryRegionCode: String! @field_references(
+    name: "territory_country_fk"
+    references_name: "CountryRegion"
+    field: "CountryRegionCode"
+    query: "country"
+    description: "Country"
+    references_query: "territories"
+    references_description: "Sales territories"
+  )
+  "Territory group"
+  Group: String!
+  "Sales year to date"
+  SalesYTD: Float!
+  "Sales last year"
+  SalesLastYear: Float!
+  "Cost year to date"
+  CostYTD: Float!
+  "Cost last year"
+  CostLastYear: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales representatives."
+type SalesPerson @table(name: "Sales.SalesPerson") @module(name: "sales") {
+  "Employee reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "sp_employee_fk"
+    references_name: "Employee"
+    field: "BusinessEntityID"
+    query: "employee"
+    description: "Employee"
+    references_query: "sales_person"
+    references_description: "Sales person record"
+  )
+  "Territory reference"
+  TerritoryID: Int @field_references(
+    name: "sp_territory_fk"
+    references_name: "SalesTerritory"
+    field: "TerritoryID"
+    query: "territory"
+    description: "Sales territory"
+    references_query: "sales_people"
+    references_description: "Sales people in this territory"
+  )
+  "Sales quota"
+  SalesQuota: Float
+  "Bonus amount"
+  Bonus: Float!
+  "Commission percentage"
+  CommissionPct: Float!
+  "Sales year to date"
+  SalesYTD: Float!
+  "Sales last year"
+  SalesLastYear: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales quota history for sales people."
+type SalesPersonQuotaHistory @table(name: "Sales.SalesPersonQuotaHistory") @module(name: "sales") {
+  "Sales person reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "spqh_sp_fk"
+    references_name: "SalesPerson"
+    field: "BusinessEntityID"
+    query: "sales_person"
+    description: "Sales person"
+    references_query: "quota_history"
+    references_description: "Quota history"
+  )
+  "Quota date"
+  QuotaDate: Timestamp! @pk
+  "Sales quota"
+  SalesQuota: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales territory assignment history."
+type SalesTerritoryHistory @table(name: "Sales.SalesTerritoryHistory") @module(name: "sales") {
+  "Sales person reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "sth_sp_fk"
+    references_name: "SalesPerson"
+    field: "BusinessEntityID"
+    query: "sales_person"
+    description: "Sales person"
+    references_query: "territory_history"
+    references_description: "Territory history"
+  )
+  "Territory reference"
+  TerritoryID: Int! @pk @field_references(
+    name: "sth_territory_fk"
+    references_name: "SalesTerritory"
+    field: "TerritoryID"
+    query: "territory"
+    description: "Territory"
+    references_query: "assignment_history"
+    references_description: "Assignment history"
+  )
+  "Start date"
+  StartDate: Timestamp! @pk
+  "End date"
+  EndDate: Timestamp
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Retail stores."
+type Store @table(name: "Sales.Store") @module(name: "sales") {
+  "Business entity reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "store_entity_fk"
+    references_name: "BusinessEntity"
+    field: "BusinessEntityID"
+    query: "business_entity"
+    description: "Business entity"
+    references_query: "store"
+    references_description: "Store details"
+  )
+  "Store name"
+  Name: String!
+  "Assigned sales person"
+  SalesPersonID: Int @field_references(
+    name: "store_sp_fk"
+    references_name: "SalesPerson"
+    field: "BusinessEntityID"
+    query: "sales_person"
+    description: "Sales person"
+    references_query: "stores"
+    references_description: "Stores assigned"
+  )
+  "Demographics data"
+  Demographics: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Customers (individuals or stores)."
+type Customer @table(name: "Sales.Customer") @module(name: "sales") {
+  "Unique identifier for the customer"
+  CustomerID: Int! @pk
+  "Person reference for individual customers"
+  PersonID: Int @field_references(
+    name: "customer_person_fk"
+    references_name: "Person"
+    field: "BusinessEntityID"
+    query: "person"
+    description: "Person details"
+    references_query: "customer"
+    references_description: "Customer record"
+  )
+  "Store reference for store customers"
+  StoreID: Int @field_references(
+    name: "customer_store_fk"
+    references_name: "Store"
+    field: "BusinessEntityID"
+    query: "store"
+    description: "Store details"
+    references_query: "customers"
+    references_description: "Customer records"
+  )
+  "Territory reference"
+  TerritoryID: Int @field_references(
+    name: "customer_territory_fk"
+    references_name: "SalesTerritory"
+    field: "TerritoryID"
+    query: "territory"
+    description: "Sales territory"
+    references_query: "customers"
+    references_description: "Customers in this territory"
+  )
+  "Account number (computed)"
+  AccountNumber: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Currencies."
+type Currency @table(name: "Sales.Currency") @module(name: "sales") {
+  "Currency code"
+  CurrencyCode: String! @pk
+  "Currency name"
+  Name: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Currency exchange rates."
+type CurrencyRate @table(name: "Sales.CurrencyRate") @module(name: "sales") {
+  "Unique identifier"
+  CurrencyRateID: Int! @pk
+  "Rate date"
+  CurrencyRateDate: Timestamp!
+  "From currency"
+  FromCurrencyCode: String! @field_references(
+    name: "cr_from_fk"
+    references_name: "Currency"
+    field: "CurrencyCode"
+    query: "from_currency"
+    description: "From currency"
+    references_query: "rates_from"
+    references_description: "Exchange rates from this currency"
+  )
+  "To currency"
+  ToCurrencyCode: String! @field_references(
+    name: "cr_to_fk"
+    references_name: "Currency"
+    field: "CurrencyCode"
+    query: "to_currency"
+    description: "To currency"
+    references_query: "rates_to"
+    references_description: "Exchange rates to this currency"
+  )
+  "Average rate"
+  AverageRate: Float!
+  "End of day rate"
+  EndOfDayRate: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Country/region currency associations."
+type CountryRegionCurrency @table(name: "Sales.CountryRegionCurrency") @module(name: "sales") {
+  "Country/region code"
+  CountryRegionCode: String! @pk @field_references(
+    name: "crc_country_fk"
+    references_name: "CountryRegion"
+    field: "CountryRegionCode"
+    query: "country"
+    description: "Country"
+    references_query: "currencies"
+    references_description: "Currencies used"
+  )
+  "Currency code"
+  CurrencyCode: String! @pk @field_references(
+    name: "crc_currency_fk"
+    references_name: "Currency"
+    field: "CurrencyCode"
+    query: "currency"
+    description: "Currency"
+    references_query: "countries"
+    references_description: "Countries using this currency"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Credit cards."
+type CreditCard @table(name: "Sales.CreditCard") @module(name: "sales") {
+  "Unique identifier"
+  CreditCardID: Int! @pk
+  "Card type"
+  CardType: String!
+  "Card number"
+  CardNumber: String!
+  "Expiration month"
+  ExpMonth: Int!
+  "Expiration year"
+  ExpYear: Int!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Person credit card associations."
+type PersonCreditCard @table(name: "Sales.PersonCreditCard") @module(name: "sales") {
+  "Person reference"
+  BusinessEntityID: Int! @pk @field_references(
+    name: "pcc_person_fk"
+    references_name: "Person"
+    field: "BusinessEntityID"
+    query: "person"
+    description: "Person"
+    references_query: "credit_cards"
+    references_description: "Credit cards"
+  )
+  "Credit card reference"
+  CreditCardID: Int! @pk @field_references(
+    name: "pcc_card_fk"
+    references_name: "CreditCard"
+    field: "CreditCardID"
+    query: "credit_card"
+    description: "Credit card"
+    references_query: "persons"
+    references_description: "Persons with this card"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Special offers and discounts."
+type SpecialOffer @table(name: "Sales.SpecialOffer") @module(name: "sales") {
+  "Unique identifier"
+  SpecialOfferID: Int! @pk
+  "Offer description"
+  Description: String!
+  "Discount percentage"
+  DiscountPct: Float!
+  "Offer type"
+  Type: String!
+  "Offer category"
+  Category: String!
+  "Start date"
+  StartDate: Timestamp!
+  "End date"
+  EndDate: Timestamp!
+  "Minimum quantity"
+  MinQty: Int!
+  "Maximum quantity"
+  MaxQty: Int
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Products included in special offers."
+type SpecialOfferProduct @table(name: "Sales.SpecialOfferProduct") @module(name: "sales") {
+  "Special offer reference"
+  SpecialOfferID: Int! @pk @field_references(
+    name: "sop_offer_fk"
+    references_name: "SpecialOffer"
+    field: "SpecialOfferID"
+    query: "special_offer"
+    description: "Special offer"
+    references_query: "products"
+    references_description: "Products in this offer"
+  )
+  "Product reference"
+  ProductID: Int! @pk @field_references(
+    name: "sop_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "special_offers"
+    references_description: "Special offers for this product"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales reasons."
+type SalesReason @table(name: "Sales.SalesReason") @module(name: "sales") {
+  "Unique identifier"
+  SalesReasonID: Int! @pk
+  "Reason name"
+  Name: String!
+  "Reason type"
+  ReasonType: String!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales order headers."
+type SalesOrderHeader @table(name: "Sales.SalesOrderHeader") @module(name: "sales") {
+  "Unique identifier for the sales order"
+  SalesOrderID: Int! @pk
+  "Revision number"
+  RevisionNumber: Int!
+  "Order date"
+  OrderDate: Timestamp!
+  "Due date"
+  DueDate: Timestamp!
+  "Ship date"
+  ShipDate: Timestamp
+  "Order status (1-6)"
+  Status: Int!
+  "Online order flag"
+  OnlineOrderFlag: Boolean!
+  "Sales order number (computed)"
+  SalesOrderNumber: String!
+  "Customer PO number"
+  PurchaseOrderNumber: String
+  "Account number"
+  AccountNumber: String
+  "Customer reference"
+  CustomerID: Int! @field_references(
+    name: "soh_customer_fk"
+    references_name: "Customer"
+    field: "CustomerID"
+    query: "customer"
+    description: "Customer"
+    references_query: "orders"
+    references_description: "Sales orders"
+  )
+  "Sales person reference"
+  SalesPersonID: Int @field_references(
+    name: "soh_sp_fk"
+    references_name: "SalesPerson"
+    field: "BusinessEntityID"
+    query: "sales_person"
+    description: "Sales person"
+    references_query: "orders"
+    references_description: "Sales orders"
+  )
+  "Territory reference"
+  TerritoryID: Int @field_references(
+    name: "soh_territory_fk"
+    references_name: "SalesTerritory"
+    field: "TerritoryID"
+    query: "territory"
+    description: "Sales territory"
+    references_query: "orders"
+    references_description: "Sales orders"
+  )
+  "Bill to address reference"
+  BillToAddressID: Int! @field_references(
+    name: "soh_bill_fk"
+    references_name: "Address"
+    field: "AddressID"
+    query: "bill_to_address"
+    description: "Billing address"
+    references_query: "bill_to_orders"
+    references_description: "Orders billed here"
+  )
+  "Ship to address reference"
+  ShipToAddressID: Int! @field_references(
+    name: "soh_ship_fk"
+    references_name: "Address"
+    field: "AddressID"
+    query: "ship_to_address"
+    description: "Shipping address"
+    references_query: "ship_to_orders"
+    references_description: "Orders shipped here"
+  )
+  "Ship method reference"
+  ShipMethodID: Int! @field_references(
+    name: "soh_method_fk"
+    references_name: "ShipMethod"
+    field: "ShipMethodID"
+    query: "ship_method"
+    description: "Ship method"
+    references_query: "sales_orders"
+    references_description: "Sales orders using this method"
+  )
+  "Credit card reference"
+  CreditCardID: Int @field_references(
+    name: "soh_card_fk"
+    references_name: "CreditCard"
+    field: "CreditCardID"
+    query: "credit_card"
+    description: "Credit card"
+    references_query: "orders"
+    references_description: "Orders using this card"
+  )
+  "Credit card approval code"
+  CreditCardApprovalCode: String
+  "Currency rate reference"
+  CurrencyRateID: Int @field_references(
+    name: "soh_rate_fk"
+    references_name: "CurrencyRate"
+    field: "CurrencyRateID"
+    query: "currency_rate"
+    description: "Currency rate"
+    references_query: "orders"
+    references_description: "Orders using this rate"
+  )
+  "Subtotal"
+  SubTotal: Float!
+  "Tax amount"
+  TaxAmt: Float!
+  "Freight"
+  Freight: Float!
+  "Total due (computed)"
+  TotalDue: Float!
+  "Comments"
+  Comment: String
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales order line items."
+type SalesOrderDetail @table(name: "Sales.SalesOrderDetail") @module(name: "sales") {
+  "Sales order reference"
+  SalesOrderID: Int! @pk @field_references(
+    name: "sod_order_fk"
+    references_name: "SalesOrderHeader"
+    field: "SalesOrderID"
+    query: "order"
+    description: "Sales order"
+    references_query: "details"
+    references_description: "Line items"
+  )
+  "Line item identifier"
+  SalesOrderDetailID: Int! @pk
+  "Carrier tracking number"
+  CarrierTrackingNumber: String
+  "Order quantity"
+  OrderQty: Int!
+  "Product reference"
+  ProductID: Int! @field_references(
+    name: "sod_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "sales_order_details"
+    references_description: "Sales order details"
+  )
+  "Special offer reference"
+  SpecialOfferID: Int! @field_references(
+    name: "sod_offer_fk"
+    references_name: "SpecialOffer"
+    field: "SpecialOfferID"
+    query: "special_offer"
+    description: "Special offer"
+    references_query: "order_details"
+    references_description: "Order details with this offer"
+  )
+  "Unit price"
+  UnitPrice: Float!
+  "Unit price discount"
+  UnitPriceDiscount: Float!
+  "Line total (computed)"
+  LineTotal: Float!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Sales reasons for orders."
+type SalesOrderHeaderSalesReason @table(name: "Sales.SalesOrderHeaderSalesReason") @module(name: "sales") {
+  "Sales order reference"
+  SalesOrderID: Int! @pk @field_references(
+    name: "sohsr_order_fk"
+    references_name: "SalesOrderHeader"
+    field: "SalesOrderID"
+    query: "order"
+    description: "Sales order"
+    references_query: "sales_reasons"
+    references_description: "Sales reasons"
+  )
+  "Sales reason reference"
+  SalesReasonID: Int! @pk @field_references(
+    name: "sohsr_reason_fk"
+    references_name: "SalesReason"
+    field: "SalesReasonID"
+    query: "reason"
+    description: "Sales reason"
+    references_query: "orders"
+    references_description: "Orders with this reason"
+  )
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}
+
+"Shopping cart items for online orders."
+type ShoppingCartItem @table(name: "Sales.ShoppingCartItem") @module(name: "sales") {
+  "Unique identifier"
+  ShoppingCartItemID: Int! @pk
+  "Shopping cart identifier"
+  ShoppingCartID: String!
+  "Quantity"
+  Quantity: Int!
+  "Product reference"
+  ProductID: Int! @field_references(
+    name: "sci_product_fk"
+    references_name: "Product"
+    field: "ProductID"
+    query: "product"
+    description: "Product"
+    references_query: "shopping_cart_items"
+    references_description: "Shopping cart items"
+  )
+  "Date created"
+  DateCreated: Timestamp!
+  "Last modification timestamp"
+  ModifiedDate: Timestamp!
+}

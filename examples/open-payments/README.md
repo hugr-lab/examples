@@ -285,7 +285,7 @@ query topPayers {
       aggregations{
         nums: _rows_count
         recipients: Covered_Recipient_NPI{
-          count(distinct: true)
+          count
         }
         nature: Nature_of_Payment_or_Transfer_of_Value{
           list(distinct:true)
@@ -595,11 +595,12 @@ extend type ownership_information {
 ```graphql
 query addCatalogSource {
   core {
-    insert_catalog_sources(
-      name: "op2023_extra",
-      type: "uriFile",
-      description: "Open Payments data",
-      path: "/workspace/examples/open-payments/extra.graphql"
+    insert_catalog_sources(data: {
+        name: "op2023_extra",
+        type: "uriFile",
+        description: "Open Payments data",
+        path: "/workspace/examples/open-payments/extra.graphql"
+      }
     ) {
       id
       name
