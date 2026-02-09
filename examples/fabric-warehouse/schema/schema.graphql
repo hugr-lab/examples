@@ -1,0 +1,270 @@
+"Date dimension table"
+type Date @table(name: "dbo.Date") {
+  "Date identifier"
+  id: Int! @pk @field_source(field: "DateID")
+  "Date value"
+  date: Timestamp @field_source(field: "Date")
+  "Date business key"
+  business_key: String @field_source(field: "DateBKey")
+  "Day of the month"
+  day_of_month: String @field_source(field: "DayOfMonth")
+  "Day suffix (st, nd, rd, th)"
+  day_suffix: String @field_source(field: "DaySuffix")
+  "Day name (Monday, Tuesday, etc.)"
+  day_name: String @field_source(field: "DayName")
+  "Day of the week number"
+  day_of_week: String @field_source(field: "DayOfWeek")
+  "Day of week in month"
+  day_of_week_in_month: String @field_source(field: "DayOfWeekInMonth")
+  "Day of week in year"
+  day_of_week_in_year: String @field_source(field: "DayOfWeekInYear")
+  "Day of quarter"
+  day_of_quarter: String @field_source(field: "DayOfQuarter")
+  "Day of year"
+  day_of_year: String @field_source(field: "DayOfYear")
+  "Week of month"
+  week_of_month: String @field_source(field: "WeekOfMonth")
+  "Week of quarter"
+  week_of_quarter: String @field_source(field: "WeekOfQuarter")
+  "Week of year"
+  week_of_year: String @field_source(field: "WeekOfYear")
+  "Month number"
+  month: String @field_source(field: "Month")
+  "Month name"
+  month_name: String @field_source(field: "MonthName")
+  "Month of quarter"
+  month_of_quarter: String @field_source(field: "MonthOfQuarter")
+  "Quarter number"
+  quarter: String @field_source(field: "Quarter")
+  "Quarter name"
+  quarter_name: String @field_source(field: "QuarterName")
+  "Year"
+  year: String @field_source(field: "Year")
+  "Year name"
+  year_name: String @field_source(field: "YearName")
+  "Month-Year label"
+  month_year: String @field_source(field: "MonthYear")
+  "MMYYYY formatted date"
+  mmyyyy: String @field_source(field: "MMYYYY")
+  "First day of month"
+  first_day_of_month: Date @field_source(field: "FirstDayOfMonth")
+  "Last day of month"
+  last_day_of_month: Date @field_source(field: "LastDayOfMonth")
+  "First day of quarter"
+  first_day_of_quarter: Date @field_source(field: "FirstDayOfQuarter")
+  "Last day of quarter"
+  last_day_of_quarter: Date @field_source(field: "LastDayOfQuarter")
+  "First day of year"
+  first_day_of_year: Date @field_source(field: "FirstDayOfYear")
+  "Last day of year"
+  last_day_of_year: Date @field_source(field: "LastDayOfYear")
+  "Is a US holiday"
+  is_holiday_usa: Boolean @field_source(field: "IsHolidayUSA")
+  "Is a weekday"
+  is_weekday: Boolean @field_source(field: "IsWeekday")
+  "US holiday name"
+  holiday_usa: String @field_source(field: "HolidayUSA")
+}
+
+"Medallion (taxi cab) dimension table"
+type Medallion @table(name: "dbo.Medallion") {
+  "Medallion identifier"
+  id: Int! @pk @field_source(field: "MedallionID")
+  "Medallion business key"
+  business_key: String @field_source(field: "MedallionBKey")
+  "Medallion code"
+  code: String @field_source(field: "MedallionCode")
+}
+
+"Hackney license dimension table"
+type HackneyLicense @table(name: "dbo.HackneyLicense") {
+  "Hackney license identifier"
+  id: Int! @pk @field_source(field: "HackneyLicenseID")
+  "Hackney license business key"
+  business_key: String @field_source(field: "HackneyLicenseBKey")
+  "Hackney license code"
+  code: String @field_source(field: "HackneyLicenseCode")
+}
+
+"Geography dimension table"
+type Geography @table(name: "dbo.Geography") {
+  "Geography identifier"
+  id: Int! @pk @field_source(field: "GeographyID")
+  "Zip code business key"
+  zip_code_bkey: String @field_source(field: "ZipCodeBKey")
+  "County name"
+  county: String @field_source(field: "County")
+  "City name"
+  city: String @field_source(field: "City")
+  "State name"
+  state: String @field_source(field: "State")
+  "Country name"
+  country: String @field_source(field: "Country")
+  "Zip code"
+  zip_code: String @field_source(field: "ZipCode")
+}
+
+"Time dimension table"
+type Time @table(name: "dbo.Time") {
+  "Time identifier"
+  id: Int! @pk @field_source(field: "TimeID")
+  "Time business key"
+  business_key: String @field_source(field: "TimeBKey")
+  "Hour number (0-23)"
+  hour: Int @field_source(field: "HourNumber")
+  "Minute number (0-59)"
+  minute: Int @field_source(field: "MinuteNumber")
+  "Second number (0-59)"
+  second: Int @field_source(field: "SecondNumber")
+  "Time in seconds from midnight"
+  time_in_second: Int @field_source(field: "TimeInSecond")
+  "Hourly bucket label"
+  hourly_bucket: String @field_source(field: "HourlyBucket")
+  "Day-time bucket group key"
+  day_time_bucket_group_key: Int @field_source(field: "DayTimeBucketGroupKey")
+  "Day-time bucket label"
+  day_time_bucket: String @field_source(field: "DayTimeBucket")
+}
+
+"Weather fact table"
+type Weather @table(name: "dbo.Weather") {
+  "Date reference"
+  date_id: Int! @pk @field_source(field: "DateID")
+    @field_references(
+      name: "weather_date_fk"
+      references_name: "Date"
+      field: "id"
+      query: "date"
+      description: "Date for this weather record"
+      references_query: "weather"
+      references_description: "Weather records for this date"
+    )
+  "Geography reference"
+  geography_id: Int! @pk @field_source(field: "GeographyID")
+    @field_references(
+      name: "weather_geography_fk"
+      references_name: "Geography"
+      field: "id"
+      query: "geography"
+      description: "Geography for this weather record"
+      references_query: "weather"
+      references_description: "Weather records for this geography"
+    )
+  "Precipitation in inches"
+  precipitation_inches: Float @field_source(field: "PrecipitationInches")
+  "Average temperature in Fahrenheit"
+  avg_temperature_fahrenheit: Float @field_source(field: "AvgTemperatureFahrenheit")
+}
+
+"Trip fact table — the central fact table linking dimensions"
+type Trip @table(name: "dbo.Trip") {
+  "Date reference"
+  date_id: Int! @pk @field_source(field: "DateID")
+    @field_references(
+      name: "trip_date_fk"
+      references_name: "Date"
+      field: "id"
+      query: "date"
+      description: "Date for this trip"
+      references_query: "trips"
+      references_description: "Trips on this date"
+    )
+  "Medallion (taxi cab) reference"
+  medallion_id: Int! @pk @field_source(field: "MedallionID")
+    @field_references(
+      name: "trip_medallion_fk"
+      references_name: "Medallion"
+      field: "id"
+      query: "medallion"
+      description: "Medallion (taxi cab) for this trip"
+      references_query: "trips"
+      references_description: "Trips for this medallion"
+    )
+  "Hackney license reference"
+  hackney_license_id: Int! @pk @field_source(field: "HackneyLicenseID")
+    @field_references(
+      name: "trip_hackney_license_fk"
+      references_name: "HackneyLicense"
+      field: "id"
+      query: "hackney_license"
+      description: "Hackney license for this trip"
+      references_query: "trips"
+      references_description: "Trips for this hackney license"
+    )
+  "Pickup time reference"
+  pickup_time_id: Int @field_source(field: "PickupTimeID")
+    @field_references(
+      name: "trip_pickup_time_fk"
+      references_name: "Time"
+      field: "id"
+      query: "pickup_time"
+      description: "Pickup time for this trip"
+      references_query: "pickup_trips"
+      references_description: "Trips with this pickup time"
+    )
+  "Dropoff time reference"
+  dropoff_time_id: Int @field_source(field: "DropoffTimeID")
+    @field_references(
+      name: "trip_dropoff_time_fk"
+      references_name: "Time"
+      field: "id"
+      query: "dropoff_time"
+      description: "Dropoff time for this trip"
+      references_query: "dropoff_trips"
+      references_description: "Trips with this dropoff time"
+    )
+  "Pickup geography reference"
+  pickup_geography_id: Int @field_source(field: "PickupGeographyID")
+    @field_references(
+      name: "trip_pickup_geography_fk"
+      references_name: "Geography"
+      field: "id"
+      query: "pickup_geography"
+      description: "Pickup geography for this trip"
+      references_query: "pickup_trips"
+      references_description: "Trips picked up in this geography"
+    )
+  "Dropoff geography reference"
+  dropoff_geography_id: Int @field_source(field: "DropoffGeographyID")
+    @field_references(
+      name: "trip_dropoff_geography_fk"
+      references_name: "Geography"
+      field: "id"
+      query: "dropoff_geography"
+      description: "Dropoff geography for this trip"
+      references_query: "dropoff_trips"
+      references_description: "Trips dropped off in this geography"
+    )
+  "Pickup latitude"
+  pickup_latitude: Float @field_source(field: "PickupLatitude")
+  "Pickup longitude"
+  pickup_longitude: Float @field_source(field: "PickupLongitude")
+  "Pickup latitude/longitude string"
+  pickup_lat_long: String @field_source(field: "PickupLatLong")
+  "Dropoff latitude"
+  dropoff_latitude: Float @field_source(field: "DropoffLatitude")
+  "Dropoff longitude"
+  dropoff_longitude: Float @field_source(field: "DropoffLongitude")
+  "Dropoff latitude/longitude string"
+  dropoff_lat_long: String @field_source(field: "DropoffLatLong")
+  "Number of passengers"
+  passenger_count: Int @field_source(field: "PassengerCount")
+  "Trip duration in seconds"
+  trip_duration_seconds: Int @field_source(field: "TripDurationSeconds")
+  "Trip distance in miles"
+  trip_distance_miles: Float @field_source(field: "TripDistanceMiles")
+  "Payment type (Cash, Credit, etc.)"
+  payment_type: String @field_source(field: "PaymentType")
+  "Base fare amount"
+  fare_amount: Float @field_source(field: "FareAmount")
+  "Surcharge amount"
+  surcharge_amount: Float @field_source(field: "SurchargeAmount")
+  "Tax amount"
+  tax_amount: Float @field_source(field: "TaxAmount")
+  "Tip amount"
+  tip_amount: Float @field_source(field: "TipAmount")
+  "Tolls amount"
+  tolls_amount: Float @field_source(field: "TollsAmount")
+  "Total trip amount"
+  total_amount: Float @field_source(field: "TotalAmount")
+}
