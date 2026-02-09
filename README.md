@@ -57,3 +57,18 @@ This example demonstrates how to use hugr with Microsoft SQL Server as a data so
 - Many-to-many relationships (CustomerAddress junction table)
 
 **Note**: Requires amd64 platform (Intel/AMD processor).
+
+### 4. Fabric Warehouse Example
+
+Folder: fabric-warehouse/
+
+This example demonstrates how to use hugr with Microsoft Fabric Warehouse as a cloud data source, connecting via the `azure://` URI scheme with Azure AD service principal authentication. It showcases:
+- Fabric Warehouse connection via `azure://` URI format with Azure AD credentials
+- Catalog-based schema loading with GraphQL SDL
+- `@field_source` directive for simplifying column names in queries
+- `@field_references` for star schema relationships (7 dimension references on Trip)
+- GraphQL schema patterns: `@table`, `@pk`, `@field_source`, `@field_references`
+- Filtering by relationships, aggregation, and bucket aggregation queries
+- NYC taxi star schema: Date, Trip, Medallion, HackneyLicense, Geography, Time, Weather
+
+**Note**: Requires an active Microsoft Fabric Warehouse instance with Azure AD service principal credentials.
