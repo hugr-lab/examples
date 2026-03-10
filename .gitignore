@@ -3,4 +3,7 @@
 .env
 .DS_store
 *.duckdb
+*.duckdb.wal
+*.duckdb_extension
 specs/
+examples/ducklake/taxi_zone_lookup.csv

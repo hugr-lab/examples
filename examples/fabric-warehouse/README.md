@@ -27,7 +27,7 @@ sh scripts/start.sh
 Open hugr GraphiQL at http://localhost:18000/admin and execute:
 
 ```graphql
-mutation addAzure($data: data_sources_mut_input_data!) {
+mutation addAzure($data: core_data_sources_mut_input_data!) {
   core {
     insert_data_sources(data: $data) {
       name

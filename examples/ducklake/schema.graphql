@@ -1,0 +1,26 @@
+# Enhanced schema for NYC Yellow Taxi DuckLake example.
+# Adds relationships between trips and zones, plus computed fields.
+
+extend type trips {
+    PULocationID: Int @field_references(
+        name: "trips_pickup_zone_fk"
+        references_name: "zones"
+        field: "LocationID"
+        query: "pickup_zone"
+        description: "Pickup taxi zone"
+        references_query: "pickup_trips"
+        references_description: "Trips starting in this zone"
+    )
+    DOLocationID: Int @field_references(
+        name: "trips_dropoff_zone_fk"
+        references_name: "zones"
+        field: "LocationID"
+        query: "dropoff_zone"
+        description: "Dropoff taxi zone"
+        references_query: "dropoff_trips"
+        references_description: "Trips ending in this zone"
+    )
+
+    "Trip duration in minutes"
+    duration_minutes: Float @sql(exp: "EXTRACT(EPOCH FROM (tpep_dropoff_datetime - tpep_pickup_datetime)) / 60.0")
+}

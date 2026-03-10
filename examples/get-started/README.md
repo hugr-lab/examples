@@ -25,7 +25,7 @@ Open browser and go to `http://localhost:18000/admin` (port can be changed throu
 Create a new data source with the following mutation:
 
 ```graphql
-mutation addNorthwindDataSet($data: data_sources_mut_input_data! = {}) {
+mutation addNorthwindDataSet($data: core_data_sources_mut_input_data! = {}) {
   core {
     insert_data_sources(data: $data) {
       name

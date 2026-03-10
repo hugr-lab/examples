@@ -288,7 +288,7 @@ mutation addDataBucket {
       storage {
         register_object_storage(
           type: "S3"
-          endpoint: "minio:9000"
+          endpoint: "localhost:18080"
           key: "minio_admin" # replace with your MinIO access key
           name: "examples"
           region: ""

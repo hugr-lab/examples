@@ -72,3 +72,15 @@ This example demonstrates how to use hugr with Microsoft Fabric Warehouse as a c
 - NYC taxi star schema: Date, Trip, Medallion, HackneyLicense, Geography, Time, Weather
 
 **Note**: Requires an active Microsoft Fabric Warehouse instance with Azure AD service principal credentials.
+
+### 5. DuckLake: NYC Yellow Taxi
+
+Folder: ducklake/
+
+This example demonstrates DuckLake as a data source in hugr using the NYC Yellow Taxi trip dataset (~36M real trips). It showcases:
+- Self-describing DuckLake data source (auto-generated GraphQL schema)
+- Time-travel queries with `@at` directive across monthly snapshots
+- Relationships via extension catalog (`trips` → `zones` for pickup/dropoff)
+- DDL operations (add columns, create tables)
+- DuckLake management functions (maintenance, snapshots, metadata views)
+- Data stored in MinIO S3, metadata in PostgreSQL

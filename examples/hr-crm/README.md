@@ -44,7 +44,7 @@ Open browser and go to `http://localhost:18000/admin` (port can be changed throu
 Create a new data source with the following mutation:
 
 ```graphql
-mutation addHRCRMDataSet($data: data_sources_mut_input_data! = {}) {
+mutation addHRCRMDataSet($data: core_data_sources_mut_input_data! = {}) {
   core {
     insert_data_sources(data: $data) {
       name
@@ -75,7 +75,7 @@ You can use the following variables:
     "name": "hr_crm",
     "type": "mysql",
     "prefix": "hr",
-    "description": "HR CRM recruitment management system",
+    "description": "The HR CRM recruitment management system",
     "read_only": false,
     "as_module": true,
     "path": "mysql://hugr:hugr_password@mysql:3306/hr_crm",
@@ -83,7 +83,7 @@ You can use the following variables:
       {
         "name": "hr_crm",
         "type": "uri",
-        "description": "HR CRM database schema",
+        "description": "The HR CRM database schema",
         "path": "/workspace/examples/hr-crm/schema"
       }
     ]
