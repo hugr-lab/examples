@@ -1,86 +1,154 @@
 # The `hugr` examples
 
-This repository contains examples of how to use the `hugr` platform for various use-cases, including setting up data sources, creating GraphQL schemas, and integrating with different services like PostgreSQL, Redis, and MinIO.
-
-For more information about the `hugr` platform, please visit the [Web site](https://hugr-lab.github.io).
-
-This repo contains examples of hugr use-cases.
+This repository contains examples of how to use the [hugr](https://hugr-lab.github.io) platform for various use-cases: setting up data sources, creating GraphQL schemas, and integrating with different services.
 
 ## Set up the environment
 
-To run the examples, you need to set up the environment. The examples are based on Docker and Docker Compose.
-To set up the environment, run the following command:
+The examples run on Docker and Docker Compose.
 
 ```bash
-git clone git://git@github.com:hugr-lab/examples.git
+git clone https://github.com/hugr-lab/examples.git
 cd examples
 sh scripts/start.sh
 ```
 
-To down the environment, run:
+To stop the environment:
 
 ```bash
 sh scripts/stop.sh
 ```
 
-The environment contains the following services:
+The base environment includes:
 
-- PostgreSQL database
-- MinIO object storage
+- PostgreSQL (with TimescaleDB and PostGIS)
+- MySQL
+- MinIO (S3-compatible object storage)
 - Redis
-- Hugr server
-- Prometheus for monitoring
-- Grafana for visualization
+- hugr server
+- Prometheus + Grafana (monitoring)
+
+Some examples require additional services started via Docker Compose profiles (see individual example READMEs).
 
 ## Examples
 
-### 1. Get started
+### 1. Get Started
 
-Folder: get-started/
+Folder: `get-started/`
 
-In this example we will set up a Northwind database on PostgreSQL and create GraphQL SDL schema for it.
+Set up a Northwind database on PostgreSQL and create a GraphQL SDL schema for it. A good starting point for learning hugr basics.
 
-### 2. PostgresSQL example
+### 2. PostgreSQL
 
-In this example we will create an empty data PostgreSQL data base, describe it in GraphQL SDL and attach it into Hugr as a data source.
-Folder: postgres-examples/
+Folder: `postgres-examples/`
 
-### 3. MSSQL Adventure Works Example
+Create an empty PostgreSQL database, describe it in GraphQL SDL, and attach it to hugr as a data source.
 
-Folder: mssql/
+### 3. Sales (PostgreSQL + PostGIS)
 
-This example demonstrates how to use hugr with Microsoft SQL Server as a data source, featuring the Adventure Works Lightweight (LT) sample database. It showcases:
-- MSSQL data source configuration with the `mssql://` URI format
+Folder: `sales/`
+
+E-commerce sales system on PostgreSQL with PostGIS geospatial support. Showcases:
+- Many-to-many relationships (products ↔ tags)
+- Geospatial fields (customer addresses, order locations)
+- Composite primary keys
+- Time-windowed aggregations (top customers by date range)
+
+### 4. HR-CRM (MySQL)
+
+Folder: `hr-crm/`
+
+Human Resources & recruitment management system on MySQL. Showcases:
+- MySQL data source configuration
+- Complex many-to-many relationships (candidates ↔ skills)
+- Pipeline stage tracking (applications → interviews → hiring)
+- Aggregations on applications and interview scoring
+
+### 5. MSSQL Adventure Works
+
+Folder: `mssql/`
+
+Microsoft SQL Server with the Adventure Works Lightweight sample database. Showcases:
+- MSSQL data source with the `mssql://` URI format
 - DuckDB MSSQL extension with projection and filter pushdown
-- GraphQL schema patterns: `@table`, `@pk`, `@field_references`
 - Hierarchical data (self-referencing categories)
 - Many-to-many relationships (CustomerAddress junction table)
 
 **Note**: Requires amd64 platform (Intel/AMD processor).
 
-### 4. Fabric Warehouse Example
+### 6. Fabric Warehouse
 
-Folder: fabric-warehouse/
+Folder: `fabric-warehouse/`
 
-This example demonstrates how to use hugr with Microsoft Fabric Warehouse as a cloud data source, connecting via the `azure://` URI scheme with Azure AD service principal authentication. It showcases:
-- Fabric Warehouse connection via `azure://` URI format with Azure AD credentials
-- Catalog-based schema loading with GraphQL SDL
-- `@field_source` directive for simplifying column names in queries
-- `@field_references` for star schema relationships (7 dimension references on Trip)
-- GraphQL schema patterns: `@table`, `@pk`, `@field_source`, `@field_references`
-- Filtering by relationships, aggregation, and bucket aggregation queries
-- NYC taxi star schema: Date, Trip, Medallion, HackneyLicense, Geography, Time, Weather
+Microsoft Fabric Warehouse as a cloud data source via `azure://` URI with Azure AD authentication. Showcases:
+- Azure AD service principal credentials
+- `@field_source` directive for simplifying column names
+- `@field_references` for star schema relationships
+- NYC taxi star schema (Date, Trip, Medallion, Geography, Weather)
 
-**Note**: Requires an active Microsoft Fabric Warehouse instance with Azure AD service principal credentials.
+**Note**: Requires an active Microsoft Fabric Warehouse instance.
 
-### 5. DuckLake: NYC Yellow Taxi
+### 7. OpenWeatherMap (HTTP API)
 
-Folder: ducklake/
+Folder: `openweathermap/`
 
-This example demonstrates DuckLake as a data source in hugr using the NYC Yellow Taxi trip dataset (~36M real trips). It showcases:
+Real-time weather data from the OpenWeatherMap REST API. Showcases:
+- HTTP data source connector
+- OpenAPI specification parsing with `x-hugr-type` / `x-hugr-name` extensions
+- Function definitions with SQL expressions
+
+**Note**: Requires an OpenWeatherMap API key.
+
+### 8. OSM (OpenStreetMap + Geospatial)
+
+Folder: `osm/`
+
+OpenStreetMap geospatial data (roads, amenities, administrative boundaries). Showcases:
+- Self-describing DuckDB data source
+- Geospatial queries (intersects, centroid, length measurement)
+- Aggregations by administrative boundaries
+- S3 object storage integration
+
+### 9. H3 Geospatial Indexing
+
+Folder: `h3/`
+
+German census population data with H3 geospatial indexing. Showcases:
+- DuckDB data source with H3 extension
+- OSM data extension with computed fields
+- Geospatial aggregation at different H3 resolutions
+
+### 10. Open Payments (Large Dataset)
+
+Folder: `open-payments/`
+
+US healthcare Open Payments dataset (~1.3 GB). Showcases:
+- Self-describing DuckDB data source
+- Time-travel queries
+- Large-scale payment analytics
+- State/quarter aggregations with reference fields
+
+### 11. DuckLake: NYC Yellow Taxi
+
+Folder: `ducklake/`
+
+DuckLake data source with the NYC Yellow Taxi trip dataset (~36M trips). Showcases:
 - Self-describing DuckLake data source (auto-generated GraphQL schema)
 - Time-travel queries with `@at` directive across monthly snapshots
-- Relationships via extension catalog (`trips` → `zones` for pickup/dropoff)
+- Relationships via extension catalog (`trips` → `zones`)
 - DDL operations (add columns, create tables)
 - DuckLake management functions (maintenance, snapshots, metadata views)
 - Data stored in MinIO S3, metadata in PostgreSQL
+
+### 12. Iceberg: Weather Observations with Time-Travel
+
+Folder: `iceberg/`
+
+Apache Iceberg data source with a weather observations dataset. Showcases:
+- Apache Polaris as Iceberg REST catalog with OAuth2 authentication
+- Self-describing Iceberg data source (auto-generated GraphQL schema)
+- Time-travel queries with `@at` directive across monthly snapshots
+- Namespace-to-module mapping (Iceberg namespaces become GraphQL modules)
+- Relationships via extension catalog (observations → weather stations)
+- Data stored in MinIO S3
+
+**Note**: Requires `--profile iceberg` to start Polaris services: `docker compose --profile iceberg up -d`

@@ -1,0 +1,206 @@
+"""
+The categories of products
+"""
+type categories @table(name: "categories") {
+  id: Int! @pk @default(sequence: "categories_id_seq")
+  name: String!
+}
+
+"""
+The products available for sale
+"""
+type products @table(name: "products") {
+  id: Int! @pk @default(sequence: "products_id_seq")
+  name: String!
+  price: Float!
+  category_id: Int! @field_references(
+    name: "products_category_id", 
+    references_name: "categories"
+    field: "id",
+    query: "category"
+    description: "Category of the product"
+    references_query: "products"
+    references_description: "Products in the category"
+  )
+}
+
+"""
+The tags for products
+"""
+type tags @table(name: "tags") {
+  id: Int! @pk @default(sequence: "tags_id_seq")
+  name: String!
+}
+
+"""
+The products associated with each tag
+"""
+type products_tags @table(name: "products_tags", is_m2m: true) {
+  product_id: Int! @field_references(
+    name: "products_tags_product_id", 
+    references_name: "products"
+    field: "id",
+    query: "product"
+    description: "Product in the tag"
+    references_query: "tags"
+    references_description: "tags"
+  )
+  tag_id: Int! @field_references(
+    name: "products_tags_tag_id", 
+    references_name: "tags"
+    field: "id",
+    query: "tag"
+    description: "Tag of the product"
+    references_query: "products"
+    references_description: "Tagged products"
+  )
+}
+
+"""
+The groups to which customers belong
+"""
+type customer_groups @table(name: "customer_groups") {
+	id: Int! @pk
+	name: String
+}
+
+"""
+The customers who have placed orders
+"""
+type customers @table(name: "customers") {
+	id: Int! @pk
+	group_id: Int! @field_references(
+    name: "customers_group_id",
+    references_name: "customer_groups",
+    field: "id",
+    query: "group",
+    description: "Group",
+    references_query: "customers",
+    references_description: "Customer groups"
+  )
+	name: String
+	email: String
+	created_at: Timestamp
+	deleted_at: Timestamp
+	deleted_by: String
+}
+
+"""
+The addresses of customers
+"""
+type customer_addresses @table(name: "customer_addresses") {
+	code: String! @pk
+	customer_id: Int! @pk @field_references(
+    name: "customer_addresses_customer_id",
+    references_name: "customers",
+    field: "id",
+    query: "customer",
+    description: "Customer ID",
+    references_query: "customer_addresses",
+    references_description: "Customer addresses"
+  )
+	address: String
+	geom: Geometry
+	created_at: Timestamp
+	deleted_at: Timestamp
+	deleted_by: String
+}
+
+
+"""
+The orders placed by customers
+"""
+type orders @table(name: "orders") 
+  @references(
+    name: "orders_customer_addresses_fkey",
+    references_name: "customer_addresses",
+    source_fields: ["customer_id","address_code"],
+    references_fields: ["customer_id","code"],
+    query: "customer_address",
+    description: "Customer address",
+    references_query: "orders",
+    references_description: "Orders"
+){
+	id: Int! @pk
+	customer_id: Int! @field_references(
+    name: "orders_customer_id",
+    references_name: "customers",
+    field: "id",
+    query: "customer",
+    description: "Customer",
+    references_query: "orders",
+    references_description: "Orders"
+  )
+	order_date: Timestamp
+	address_code: String
+	geom: Geometry
+	status: String
+	amount: Float
+}
+
+"""
+The items in each order
+"""
+type order_items @table(name: "order_items") {
+	id: Int! @pk
+	order_id: Int! @field_references(
+    name: "order_items_order_id",
+    references_name: "orders",
+    field: "id",
+    query: "order",
+    description: "Order",
+    references_query: "order_items",
+    references_description: "Items in the order"
+  )
+	product_id: Int! @field_references(
+    name: "order_items_product_id",
+    references_name: "products",
+    field: "id",
+    query: "product",
+    description: "Product",
+    references_query: "order_items",
+    references_description: "Items in the order"
+  )
+	quantity: Int!
+	price: Float!
+	discount: Float!
+	amount: Float!
+}
+
+"""
+Top customers view
+"""
+type top_customers @view(
+  name: "top_customers"
+  sql: """
+  SELECT customer_id, SUM(order_items.amount) as total_spent
+  FROM orders
+    JOIN order_items ON orders.id = order_items.order_id
+  WHERE
+    orders.status = 'completed' AND
+    orders.order_date BETWEEN COALESCE([$from], [$requested]-INTERVAL '1 month') AND COALESCE([$to], [$requested]) AND
+    orders.order_date <= [$requested]
+  GROUP BY customer_id
+  """
+) @args(name: "top_customers_input") {
+  customer_id: Int! 
+    @field_references(
+      name: "top_customers_customer_id",
+      references_name: "customers",
+      field: "id",
+      query: "customer",
+      description: "Customer",
+      references_query: "top_customers",
+      references_description: "Top customers"
+    )
+  total_spent: Float!
+}
+
+"""
+Top customers view arguments
+"""
+input top_customers_input {
+  requested: Timestamp!
+  from: Timestamp
+  to: Timestamp
+}

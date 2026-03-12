@@ -1,0 +1,12 @@
+# Extension catalog: adds relationships between weather stations and observations.
+# This catalog is optional — the Iceberg source auto-discovers tables with self_defined: true.
+
+extend type demo_observations {
+    station_id: BigInt @field_references(
+        name: "observations_station_fk"
+        references_name: "demo_weather_stations"
+        field: "station_id"
+        query: "station"
+        references_query: "observations"
+    )
+}

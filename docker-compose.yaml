@@ -312,6 +312,121 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
     restart: unless-stopped
 
+  # Apache Polaris — Iceberg REST catalog (only starts with --profile iceberg)
+  polaris:
+    image: apache/polaris:latest
+    container_name: hugr-polaris
+    profiles:
+      - iceberg
+    ports:
+      - "${POLARIS_PORT:-18182}:8181"
+    depends_on:
+      minio:
+        condition: service_healthy
+      polaris-minio-init:
+        condition: service_completed_successfully
+    environment:
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${MINIO_USER:-minio_admin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD:-minio_password123}
+      POLARIS_BOOTSTRAP_CREDENTIALS: "POLARIS,${POLARIS_CLIENT_ID:-root},${POLARIS_CLIENT_SECRET:-s3cr3t}"
+      polaris.realm-context.realms: POLARIS
+      quarkus.otel.sdk.disabled: "true"
+      polaris.features."ALLOW_INSECURE_STORAGE_TYPES": "true"
+      polaris.features."SUPPORTED_CATALOG_STORAGE_TYPES": '["FILE","S3","GCS","AZURE"]'
+      polaris.readiness.ignore-severe-issues: "true"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8182/q/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 15
+      start_period: 15s
+    restart: unless-stopped
+
+  # Create MinIO bucket for Polaris/Iceberg data
+  polaris-minio-init:
+    image: quay.io/minio/mc:latest
+    container_name: hugr-polaris-minio-init
+    profiles:
+      - iceberg
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: "/bin/sh"
+    command:
+      - "-c"
+      - >-
+        echo Creating MinIO bucket for Iceberg... &&
+        mc alias set pol http://minio:9000 ${MINIO_USER:-minio_admin} ${MINIO_PASSWORD:-minio_password123} &&
+        mc mb --ignore-existing pol/iceberg-warehouse &&
+        echo Bucket setup complete.
+
+  # Create Polaris catalog via Management API
+  polaris-setup:
+    image: alpine/curl:8.17.0
+    container_name: hugr-polaris-setup
+    profiles:
+      - iceberg
+    depends_on:
+      polaris:
+        condition: service_healthy
+    environment:
+      CLIENT_ID: ${POLARIS_CLIENT_ID:-root}
+      CLIENT_SECRET: ${POLARIS_CLIENT_SECRET:-s3cr3t}
+    entrypoint: "/bin/sh"
+    command:
+      - "-c"
+      - >-
+        apk add --no-cache jq > /dev/null 2>&1 &&
+        echo "Obtaining Polaris token..." &&
+        TOKEN=$$(curl --fail-with-body -s
+        http://polaris:8181/api/catalog/v1/oauth/tokens
+        --user $${CLIENT_ID}:$${CLIENT_SECRET}
+        -H "Polaris-Realm: POLARIS"
+        -d grant_type=client_credentials
+        -d scope=PRINCIPAL_ROLE:ALL | jq -r .access_token) &&
+        echo "Creating Iceberg catalog..." &&
+        curl --fail-with-body -s
+        -H "Authorization: Bearer $${TOKEN}"
+        -H "Accept: application/json"
+        -H "Content-Type: application/json"
+        -H "Polaris-Realm: POLARIS"
+        http://polaris:8181/api/management/v1/catalogs
+        -d '{
+          "catalog": {
+            "name": "iceberg_warehouse",
+            "type": "INTERNAL",
+            "readOnly": false,
+            "properties": {
+              "default-base-location": "s3://iceberg-warehouse/"
+            },
+            "storageConfigInfo": {
+              "storageType": "S3",
+              "endpoint": "http://minio:9000",
+              "endpointInternal": "http://minio:9000",
+              "pathStyleAccess": true
+            }
+          }
+        }' &&
+        echo &&
+        echo "Granting catalog admin content access..." &&
+        curl --fail-with-body -s
+        -H "Authorization: Bearer $${TOKEN}"
+        -H "Content-Type: application/json"
+        -H "Polaris-Realm: POLARIS"
+        -X PUT
+        http://polaris:8181/api/management/v1/catalogs/iceberg_warehouse/catalog-roles/catalog_admin/grants
+        -d '{"type":"catalog","privilege":"CATALOG_MANAGE_CONTENT"}' &&
+        echo &&
+        echo "Polaris catalog setup complete." &&
+        touch /tmp/polaris-setup-done &&
+        tail -f /dev/null
+    healthcheck:
+      interval: 2s
+      timeout: 10s
+      retries: 120
+      test: ["CMD", "test", "-f", "/tmp/polaris-setup-done"]
+
 volumes:
   postgres_data:
     driver: local
